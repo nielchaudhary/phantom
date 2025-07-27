@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Logger } from "./config/logger";
+import { PhantomIdentityGenerator } from "./config/identity";
+import { phantomRouter } from "./config/router";
 
 dotenv.config();
 const app = express();
@@ -13,9 +15,14 @@ async function initServer() {
     app.use(express.json());
     app.use(cors());
 
+    app.use(phantomRouter[0], phantomRouter[1]);
+
     app.listen(PORT, () => {
       logger.info(`PHANTOM APP SERVER LIVE ON PORT ${PORT}`);
     });
+
+    const identity = PhantomIdentityGenerator.generateAnonymousIdentity();
+    logger.info(identity);
 
     logger.info("PHANTOM APP SERVER PROCESSES STARTED SUCCESSFULLY");
   } catch (error) {
