@@ -21,9 +21,6 @@ async function initServer() {
       logger.info(`PHANTOM APP SERVER LIVE ON PORT ${PORT}`);
     });
 
-    const identity = PhantomIdentityGenerator.generateAnonymousIdentity();
-    logger.info(identity);
-
     logger.info("PHANTOM APP SERVER PROCESSES STARTED SUCCESSFULLY");
   } catch (error) {
     logger.error("PHANTOM APP SERVER PROCESSES STARTED FAILED DUE TO ", error);
