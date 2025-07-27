@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+p {
+  @apply text-white leading-7 [&:not(:first-child)]:mt-6 font-sans;
+}
+
+code {
+  @apply bg-zinc-800 relative rounded px-[0.3rem] py-[0.2rem] text-white font-mono text-sm font-semibold;
+}
