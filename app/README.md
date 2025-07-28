@@ -11,55 +11,6 @@ This project provides an anonymous chat application where user privacy is paramo
 
 This application aims to provide a secure and private communication channel for individuals who value their anonymity.
 
-## 🚀 Technology Stack
-
-This project is built using modern web technologies to deliver a fast, robust, and scalable application:
-
-- **React**: A declarative, efficient, and flexible JavaScript library for building user interfaces
-- **Vite**: A next-generation frontend tooling that provides an extremely fast development experience and optimized build process
-- **TypeScript**: A superset of JavaScript that adds static types, improving code quality, readability, and maintainability
-
-## 🛠️ Getting Started
-
-To get a local copy up and running, follow these simple steps.
-
-### Prerequisites
-
-Ensure you have the following installed:
-
-- **Node.js** (LTS version recommended)
-- **npm** or **Yarn**
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/your-repo-name.git
-   ```
-
-2. **Navigate to the project directory:**
-   ```bash
-   cd your-repo-name
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-### Running the Project
-
-To start the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-```
-
-This will typically start the application on `http://localhost:5173` (or another port if 5173 is in use).
 
 ## ✨ Core Features
 
@@ -83,12 +34,5 @@ In this project, ZKPs are fundamental to ensuring that users can authenticate an
 - [ ] Mobile application development
 - [ ] Integration with additional ZKP libraries
 
-## 🤝 Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
