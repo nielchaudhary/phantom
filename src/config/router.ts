@@ -5,4 +5,4 @@ const router = express.Router();
 
 router.post("/generate-identity", generateIdentity);
 
-export const phantomRouter: [string, express.Router] = ["/phantom", router];
+export const phantomRouter: [string, express.Router] = ["/v1", router];

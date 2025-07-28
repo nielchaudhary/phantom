@@ -13,7 +13,13 @@ const PORT = process.env.PORT || 8090;
 async function initServer() {
   try {
     app.use(express.json());
-    app.use(cors());
+    app.use(
+      cors({
+        origin: "*",
+        methods: "*",
+        allowedHeaders: "*",
+      })
+    );
 
     app.use(phantomRouter[0], phantomRouter[1]);
 

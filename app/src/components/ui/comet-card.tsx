@@ -119,8 +119,7 @@ export const CometCard = ({
 export function PhantomCometCard() {
   return (
     <CometCard>
-      <button
-        type="button"
+      <div
         className="my-5 flex w-100 cursor-pointer flex-col items-stretch rounded-[16px] border-0 bg-zinc-900 p-2 saturate-0 md:my-5 md:p-2"
         aria-label="View invite F7RA"
         style={{
@@ -177,12 +176,17 @@ export function PhantomCometCard() {
           </div>
         </div>
         <div className="mt-2 flex flex-shrink-0 items-center justify-between p-4 font-mono text-white">
-          <button className="text-xs">phantom</button>
+          <button
+            onClick={() => window.open("https://github.com/layer1hq", "_blank")}
+            className="text-xs text-gray-300 opacity-50 cursor-pointer"
+          >
+            LAYER1
+          </button>
           <button className="text-xs text-gray-300 opacity-50">
             <IconShieldCheckFilled />
           </button>
         </div>
-      </button>
+      </div>
     </CometCard>
   );
 }
