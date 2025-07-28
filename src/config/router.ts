@@ -5,6 +5,6 @@ import { getIdentity } from "../api/get-identity";
 const router = express.Router();
 
 router.post("/generate-identity", generateIdentity);
-router.get("/get-identity", getIdentity);
+router.post("/get-identity", getIdentity);
 
 export const phantomRouter: [string, express.Router] = ["/v1", router];
