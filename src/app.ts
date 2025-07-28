@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Logger } from "./config/logger";
-import { PhantomIdentityGenerator } from "./config/identity";
 import { phantomRouter } from "./config/router";
+import { initDB } from "./config/db";
 
 dotenv.config();
 const app = express();
@@ -21,6 +21,13 @@ async function initServer() {
       })
     );
 
+    try {
+      await initDB();
+    } catch (error) {
+      logger.error("Failed to initialise PhantomDB due to : ", error);
+      process.exit(1);
+    }
+
     app.use(phantomRouter[0], phantomRouter[1]);
 
     app.listen(PORT, () => {
@@ -33,6 +40,21 @@ async function initServer() {
     process.exit(1);
   }
 }
+
+process.on("SIGINT", () => {
+  logger.info("PHANTOM APP SERVER PROCESSES STOPPED SUCCESSFULLY");
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  logger.info("Received SIGTERM. Gracefully shutting down...");
+  process.exit(0);
+});
+
+initServer().catch((error) => {
+  logger.error("Failed to start server:", error);
+  process.exit(1);
+});
 
 process.on("SIGINT", () => {
   logger.info("PHANTOM APP SERVER PROCESSES STOPPED SUCCESSFULLY");
