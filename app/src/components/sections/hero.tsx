@@ -3,20 +3,22 @@ import { motion } from "motion/react";
 import { PhantomCometCard } from "../ui/comet-card";
 import { StatefulButton } from "../ui/stateful-button";
 import { useState, useEffect } from "react";
-import { type PhantomIdentity } from "../../types";
 import axios from "axios";
-import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal"; // Adjust import path as needed
+import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { useModal } from "../../hooks/use-modal";
+import Mnemonic from "../ui/mnemonic";
+
+interface GenerateIdentityResponse {
+  mnemonic: string[];
+}
 
 export default function HeroSection() {
-  const [identity, setIdentity] = useState<PhantomIdentity>({
-    privateKey: "",
-    publicKey: "",
-    phantomId: "",
+  const [identity, setIdentity] = useState<GenerateIdentityResponse>({
+    mnemonic: [],
   });
   const [shouldOpenModal, setShouldOpenModal] = useState(false);
 
-  const { setOpen } = useModal(); // Get modal control from context
+  const { setOpen } = useModal();
 
   const handleClick = async () => {
     const resp = await axios.post(
@@ -28,23 +30,17 @@ export default function HeroSection() {
       }
     );
     const data = resp.data;
-    setIdentity(data.identity);
+    setIdentity(data);
 
     // Trigger modal opening after button animation completes + 1 second delay
     setShouldOpenModal(true);
   };
 
-  // Open modal when identity is set and after delay
   useEffect(() => {
-    if (
-      shouldOpenModal &&
-      identity.privateKey &&
-      identity.publicKey &&
-      identity.phantomId
-    ) {
+    if (shouldOpenModal && identity.mnemonic.length > 0) {
       const timer = setTimeout(() => {
         setOpen(true);
-        setShouldOpenModal(false); // Reset the trigger
+        setShouldOpenModal(false);
       }, 1000);
 
       return () => clearTimeout(timer);
@@ -84,34 +80,18 @@ export default function HeroSection() {
 
       <ModalBody>
         <ModalContent>
-          <div className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-100 mb-2">
-                  Phantom ID
-                </label>
-                <div className="p-3 border border-zinc-700 text-white rounded-lg font-mono text-sm break-all mb-5">
-                  {identity.phantomId}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-100 mb-2">
-                  Public Key
-                </label>
-                <div className="p-3 border border-zinc-700 text-white rounded-lg font-mono text-sm break-all mb-5">
-                  {identity.publicKey}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-100 mb-2">
-                  Private Key
-                </label>
-                <div className="p-3 border border-zinc-700 text-white rounded-lg font-mono text-sm break-all mb-5">
-                  {identity.privateKey}
-                </div>
-              </div>
+          <div className="flex flex-col items-center justify-center p-4">
+            <div>
+              <label className="flex items-center gap-2 text-sm text-red-500 font-bold mb-8">
+                Store this mnemonic phrase in a safe place, it will be used to
+                restore your identity
+              </label>
+            </div>
+            <div className="w-full max-w-md">
+              {" "}
+              {identity.mnemonic.length > 0 && (
+                <Mnemonic mnemonic={identity.mnemonic} />
+              )}
             </div>
           </div>
         </ModalContent>
@@ -120,7 +100,9 @@ export default function HeroSection() {
           <StatefulButton
             className="w-50 transform rounded-lg bg-black px-3 py-2 text-sm border border-zinc-700 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-700 dark:bg-black dark:text-gray-200 dark:hover:bg-zinc-700 cursor-pointer rounded-xl text-white leading-7 font-sans"
             onClick={() => {
-              navigator.clipboard.writeText(JSON.stringify(identity, null, 2));
+              navigator.clipboard.writeText(
+                JSON.stringify(identity.mnemonic.join(" "))
+              );
             }}
           >
             Copy to Clipboard
