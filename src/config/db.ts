@@ -22,7 +22,7 @@ class DB {
 
     try {
       logger.info(`Connecting to MongoDB...`);
-      DB.client = await new MongoClient(mongoURI).connect();
+      DB.client = await new MongoClient(mongoURI, { tls: true }).connect();
       DB.users = DB.client.db(DB_NAME).collection(USERS_COLL);
       logger.info("Initialized DB connection");
     } catch (error) {
