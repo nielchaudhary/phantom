@@ -19,21 +19,46 @@ function MnemonicWord({ word, index }: { word: string; index: number }) {
   );
 }
 
-export function MnemonicInput({ mnemonic = [] }: { mnemonic?: string[] }) {
+export function MnemonicInput({
+  mnemonic = [],
+  onChange,
+}: {
+  mnemonic?: string[];
+  onChange?: (mnemonic: string[]) => void;
+}) {
   const words = mnemonic.length > 0 ? mnemonic : Array(12).fill("");
+
+  const handleWordChange = (index: number, value: string) => {
+    const newWords = [...words];
+    newWords[index] = value;
+    onChange?.(newWords);
+  };
 
   return (
     <div className="w-full">
       <div className="grid grid-cols-3 gap-4 p-3 mx-auto max-w-md">
         {words.map((word, index) => (
-          <MnemonicInputWord key={index} word={word} index={index} />
+          <MnemonicInputWord
+            key={index}
+            word={word}
+            index={index}
+            onChange={(value) => handleWordChange(index, value)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function MnemonicInputWord({ word, index }: { word: string; index: number }) {
+function MnemonicInputWord({
+  word,
+  index,
+  onChange,
+}: {
+  word: string;
+  index: number;
+  onChange?: (value: string) => void;
+}) {
   return (
     <div className="relative">
       <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-xs text-zinc-400 z-10">
@@ -42,7 +67,8 @@ function MnemonicInputWord({ word, index }: { word: string; index: number }) {
       <input
         type="text"
         className="w-full pl-8 pr-3 py-2 bg-black border border-zinc-700 transition-all duration-300 hover:-translate-y-0.5 focus:border-zinc-500 rounded-lg text-white text-sm text-center outline-none min-h-[40px]"
-        defaultValue={word}
+        value={word}
+        onChange={(e) => onChange?.(e.target.value)}
         placeholder=""
       />
     </div>

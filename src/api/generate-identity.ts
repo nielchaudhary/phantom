@@ -36,10 +36,12 @@ export const generateIdentity = async (
       if (!user) {
         await usersColl.insertOne({
           publicKey: identity.publicKey,
+          phantomId: identity.phantomId,
         });
 
         return res.status(200).send({
           mnemonic: identity.mnemonic.split(" "),
+          phantomId: identity.phantomId,
         });
       }
 

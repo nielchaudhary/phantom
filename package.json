@@ -14,17 +14,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@noble/curves": "^1.9.4",
+    "@noble/curves": "^1.9.6",
     "@noble/ed25519": "^2.3.0",
+    "@solana/pay": "^0.2.6",
     "bip39": "^3.1.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "debug": "^4.4.1",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
     "mongodb": "^6.18.0",
-    "mongoose": "^8.16.5",
+    "mongoose": "^8.17.0",
     "nodemon": "^3.1.10",
     "starknet": "^7.6.4",
     "uuid": "^11.1.0"
@@ -34,9 +35,9 @@
     "@types/cors": "^2.8.19",
     "@types/debug": "^4.1.12",
     "@types/express": "^5.0.3",
-    "@types/lodash": "^4.17.17",
-    "@types/node": "^24.0.1",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.2.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

@@ -130,12 +130,12 @@ export function PhantomCometCard() {
       >
         <div className="mx-2 flex-1">
           <div className="relative mt-2 aspect-[3/3] w-full">
-            <p className="relative z-10 mx-auto max-w-2xl py-4 text-center text-sm text-neutral-700 dark:text-neutral-400 font-sans">
+            <p className="relative z-10 mx-auto max-w-2xl py-4 text-center text-sm text-neutral-700 dark:text-neutral-400 font-sans select-black">
               <span className="font-bold">Phantom</span> connects people across
               the globe through truly anonymous chat - powered by zero-knowledge
               proofs, we can't see who you are, where you're from, or what you
               say.{" "}
-              <span className="text-orange-400 font-semibold">
+              <span className="text-orange-400 font-semibold select:text-black">
                 Join thousands chatting freely worldwide.
               </span>
             </p>
