@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-// Add it in a separate file, I've added here for simplicity
 export const useOutsideClick = (
   ref: React.RefObject<HTMLDivElement | null>,
   callback: (event: MouseEvent | TouchEvent) => void

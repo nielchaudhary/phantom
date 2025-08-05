@@ -16,9 +16,10 @@ code {
 
 
 .home-page-bg {
-
       background: radial-gradient(125% 125% at 50% 10%, #000000 40%, #2b0707 100%);
-   
 }
 
 
+.stateful-button {
+  @apply w-60 transform rounded-lg bg-black px-3 py-2 text-sm border border-zinc-700 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-700 dark:bg-black dark:text-gray-200 dark:hover:bg-zinc-700 cursor-pointer rounded-xl text-white leading-7 font-sans;
+}

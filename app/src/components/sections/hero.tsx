@@ -110,10 +110,7 @@ export default function HeroSection() {
           }}
           className="relative z-10 flex flex-wrap items-center justify-center gap-4"
         >
-          <StatefulButton
-            className="w-60 transform rounded-lg bg-black px-3 py-2 text-sm border border-zinc-700 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-700 dark:bg-black dark:text-gray-200 dark:hover:bg-zinc-700 cursor-pointer rounded-xl text-white leading-7 font-sans"
-            onClick={handleClick}
-          >
+          <StatefulButton className="stateful-button" onClick={handleClick}>
             Join Phantom
           </StatefulButton>
           <button
@@ -156,7 +153,7 @@ export default function HeroSection() {
 
           <ModalFooter>
             <StatefulButton
-              className="w-50 transform rounded-lg bg-black px-3 py-2 text-sm border border-zinc-700 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-700 dark:bg-black dark:text-gray-200 dark:hover:bg-zinc-700 cursor-pointer rounded-xl text-white leading-7 font-sans"
+              className="stateful-button"
               onClick={() => {
                 navigator.clipboard.writeText(identity.mnemonic.join(" "));
               }}
@@ -186,7 +183,7 @@ export default function HeroSection() {
 
           <ModalFooter>
             <StatefulButton
-              className="w-50 transform rounded-lg bg-black px-3 py-2 text-sm border border-zinc-700 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-700 dark:bg-black dark:text-gray-200 dark:hover:bg-zinc-700 cursor-pointer rounded-xl text-white leading-7 font-sans"
+              className="stateful-button"
               onClick={handleVerifyMnemonic}
             >
               Import
