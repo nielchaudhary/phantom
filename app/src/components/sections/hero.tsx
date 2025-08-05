@@ -31,7 +31,7 @@ export default function HeroSection() {
   const handleClick = async () => {
     try {
       const resp = await axios.post(
-        "http://localhost:8090/v1/generate-identity",
+        "https://phantom-18fu.onrender.com/v1/generate-identity",
         {},
         {
           headers: {
@@ -62,7 +62,7 @@ export default function HeroSection() {
   const handleVerifyMnemonic = async () => {
     try {
       const resp = await axios.post(
-        "http://localhost:8090/v1/get-identity",
+        "https://phantom-18fu.onrender.com/v1/get-identity",
         {
           mnemonic: importMnemonic,
         },
