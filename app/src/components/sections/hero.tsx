@@ -9,8 +9,15 @@ import { useModal } from "../../hooks/use-modal";
 import Mnemonic, { MnemonicInput } from "../ui/mnemonic";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { GENERATE_IDENTITY_URL, GET_IDENTITY_URL } from "../../lib/constants";
+import { verifyPhantomIdExists } from "../../lib/utils";
 
 interface GenerateIdentityResponse {
+  /**
+   * A 12-word BIP39 mnemonic phrase, used for generating a key pair.
+   * The mnemonic is used to generate a private key and a public key,
+   * which are then used to create a Phantom identity.
+   */
   mnemonic: string[];
   phantomId: string;
 }
@@ -23,17 +30,18 @@ export default function HeroSection() {
   });
 
   const [importMnemonic, setImportMnemonic] = useState<string[]>([]);
+  const [targetPhantomId, setTargetPhantomId] = useState<string>("");
 
-  const [activeModal, setActiveModal] = useState<"generate" | "import">(
-    "generate"
-  );
+  const [activeModal, setActiveModal] = useState<
+    "generate" | "import" | "chat"
+  >("generate");
 
   const { setOpen } = useModal();
 
-  const handleClick = async () => {
+  const handleJoinPhantom = async () => {
     try {
       const resp = await axios.post(
-        "https://phantom-18fu.onrender.com/v1/generate-identity",
+        GENERATE_IDENTITY_URL.toString(),
         {},
         {
           headers: {
@@ -61,10 +69,10 @@ export default function HeroSection() {
     setOpen(true);
   };
 
-  const handleVerifyMnemonic = async () => {
+  const handleImportUserIdentity = async () => {
     try {
       const resp = await axios.post(
-        "https://phantom-18fu.onrender.com/v1/get-identity",
+        GET_IDENTITY_URL.toString(),
         {
           mnemonic: importMnemonic,
         },
@@ -85,12 +93,64 @@ export default function HeroSection() {
           },
           position: "top-center",
         });
-        setOpen(false);
-        navigate("/chat", { state: { identity: data.identity } });
+
+        setIdentity(data.identity);
+
+        localStorage.setItem("phantomIdentity", JSON.stringify(data.identity));
+
+        setActiveModal("chat");
       }
     } catch (error) {
       console.error("Verification failed:", error);
       toast.error("Identity verification failed, please check mnemonic phrase");
+    }
+  };
+
+  const handleInviteToChat = async () => {
+    if (!targetPhantomId.trim()) {
+      toast.error("Please enter a valid Phantom ID", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    try {
+      const resp = await verifyPhantomIdExists(targetPhantomId.trim());
+      if (resp.status === 200) {
+        localStorage.setItem("targetPhantomId", targetPhantomId.trim());
+        toast.success("Valid user, redirecting to chat", {
+          duration: 1500,
+          style: {
+            background: "black",
+            color: "white",
+            border: "none",
+          },
+          position: "top-center",
+        });
+
+        setTimeout(() => {
+          setOpen(false);
+          navigate("/chat", {
+            state: {
+              identity: identity,
+              targetPhantomId: targetPhantomId.trim(),
+            },
+          });
+        }, 2000);
+      } else if (resp.status === 404) {
+        toast.error("User Not Found, Please Check Phantom ID again.", {
+          position: "top-center",
+        });
+      } else {
+        toast.error("Something went wrong, Please Check Phantom ID again.", {
+          position: "top-center",
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying Phantom ID:", error);
+      toast.error("User Not Found, Please Check Phantom ID again.", {
+        position: "top-center",
+      });
     }
   };
 
@@ -113,7 +173,10 @@ export default function HeroSection() {
           }}
           className="relative z-10 flex flex-wrap items-center justify-center gap-4"
         >
-          <StatefulButton className="stateful-button" onClick={handleClick}>
+          <StatefulButton
+            className="stateful-button"
+            onClick={handleJoinPhantom}
+          >
             Join Phantom
           </StatefulButton>
           <button
@@ -165,7 +228,7 @@ export default function HeroSection() {
             </StatefulButton>
           </ModalFooter>
         </ModalBody>
-      ) : (
+      ) : activeModal === "import" ? (
         <ModalBody>
           <ModalContent>
             <div className="flex flex-col items-center justify-center p-4">
@@ -187,10 +250,38 @@ export default function HeroSection() {
           <ModalFooter>
             <StatefulButton
               className="stateful-button"
-              onClick={handleVerifyMnemonic}
+              onClick={handleImportUserIdentity}
             >
               Import
             </StatefulButton>
+          </ModalFooter>
+        </ModalBody>
+      ) : (
+        <ModalBody>
+          <ModalContent>
+            <div className="flex flex-col items-center justify-center p-4">
+              <div>
+                <label className="flex items-center gap-2 text-sm text-white font-bold mb-6 text-center">
+                  Enter Recipient Phantom ID
+                </label>
+              </div>
+
+              <div className="w-full max-w-md">
+                <input
+                  type="text"
+                  value={targetPhantomId}
+                  onChange={(e) => setTargetPhantomId(e.target.value)}
+                  placeholder="Enter Phantom ID"
+                  className="w-full px-4 py-2 text-sm border border-zinc-700 bg-zinc-800 text-white rounded-lg focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 text-center"
+                />
+              </div>
+            </div>
+          </ModalContent>
+
+          <ModalFooter>
+            <button className="stateful-button" onClick={handleInviteToChat}>
+              Invite to Chat
+            </button>
           </ModalFooter>
         </ModalBody>
       )}

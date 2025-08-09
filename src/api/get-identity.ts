@@ -39,8 +39,8 @@ export const getIdentity = async (req: Request, res: Response) => {
     return res.status(200).send({
       message: "Identity restored successfully",
       identity: {
-        ...deriveIdentity,
         phantomId: user?.phantomId,
+        publicKey: deriveIdentity.publicKey,
       },
     });
   } catch (error) {

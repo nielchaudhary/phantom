@@ -6,6 +6,7 @@ import { type Message } from "../../lib/chat";
 import { useAutoScroll } from "../../hooks/use-auto-scroll";
 
 import { ChatInput, EmptyState, MessageBubble } from "./chat-input";
+import { useSocket } from "../../hooks/use-socket";
 
 /**
  * Simple Two-Person Chat Component - Handles peer-to-peer messaging
@@ -16,6 +17,8 @@ import { ChatInput, EmptyState, MessageBubble } from "./chat-input";
  * - Chat session management
  */
 export const ChatInterface = () => {
+  const socket = useSocket();
+
   // ===== STATE MANAGEMENT =====
 
   // Core chat state - stores all messages in the conversation
@@ -50,8 +53,6 @@ export const ChatInterface = () => {
     if (isChatActive) return;
 
     setIsChatActive(true);
-
-    toast.success("Chat session started!");
   }, [isChatActive]);
 
   /**
@@ -63,7 +64,6 @@ export const ChatInterface = () => {
       e.preventDefault();
       if (!canSubmit) return;
 
-      // Create user message
       const userMessage = {
         id: `msg_${Date.now()}`,
         role: "user" as const,
@@ -71,9 +71,13 @@ export const ChatInterface = () => {
         timestamp: new Date(),
       };
 
-      // Add user message to chat
       setMessages((prev) => [...prev, userMessage]);
-      setInput(""); // Clear input field
+      setInput("");
+
+      if (socket) {
+        console.log("Socket connected");
+        socket.emit("message", userMessage);
+      }
 
       setTimeout(() => {
         const otherUserMessage = {
@@ -84,7 +88,7 @@ export const ChatInterface = () => {
         };
 
         setMessages((prev) => [...prev, otherUserMessage]);
-      }, 1000 + Math.random() * 2000); // Random delay 1-3 seconds
+      }, 1000 + Math.random() * 2000);
     },
     [canSubmit, input]
   );
@@ -152,10 +156,9 @@ export const ChatInterface = () => {
               <EmptyState />
             ) : (
               <>
-                {messages.map((message) => (
-                  <MessageBubble message={message} />
+                {messages.map((message, index) => (
+                  <MessageBubble message={message} key={index} />
                 ))}
-                {/* Scroll target for auto-scroll */}
                 <div ref={messagesEndRef} />
               </>
             )}
