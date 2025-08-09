@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { PhantomCometCard } from "../ui/comet-card";
 import { StatefulButton } from "../ui/stateful-button";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { useModal } from "../../hooks/use-modal";
 import Mnemonic, { MnemonicInput } from "../ui/mnemonic";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface GenerateIdentityResponse {
   mnemonic: string[];
@@ -15,6 +16,7 @@ interface GenerateIdentityResponse {
 }
 
 export default function HeroSection() {
+  const navigate = useNavigate();
   const [identity, setIdentity] = useState<GenerateIdentityResponse>({
     mnemonic: [],
     phantomId: "",
@@ -78,12 +80,13 @@ export default function HeroSection() {
           duration: 5000,
           style: {
             background: "black",
-            color: "white", // or '#ccc' for a lighter gray
+            color: "white",
             border: "none",
           },
           position: "top-center",
         });
         setOpen(false);
+        navigate("/chat", { state: { identity: data.identity } });
       }
     } catch (error) {
       console.error("Verification failed:", error);

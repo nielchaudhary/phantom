@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "../../lib/utils";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion } from "framer-motion";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ModalContext, useModal } from "../../hooks/use-modal";
 import { useOutsideClick } from "../../hooks/use-outside-click";
