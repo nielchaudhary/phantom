@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
 import type { Message } from "../lib/chat";
+import { useEffect, useRef } from "react";
 
 export const useAutoScroll = (messages: Message[]) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
