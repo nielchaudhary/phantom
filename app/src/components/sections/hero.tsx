@@ -9,7 +9,7 @@ import { useModal } from "../../hooks/use-modal";
 import Mnemonic, { MnemonicInput } from "../ui/mnemonic";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { GENERATE_IDENTITY_URL, GET_IDENTITY_URL } from "../../lib/constants";
+import { PHANTOM_API_URL } from "../../lib/constants";
 import { verifyPhantomIdExists } from "../../lib/utils";
 
 interface GenerateIdentityResponse {
@@ -41,7 +41,7 @@ export default function HeroSection() {
   const handleJoinPhantom = async () => {
     try {
       const resp = await axios.post(
-        GENERATE_IDENTITY_URL.toString(),
+        PHANTOM_API_URL + "/v1/generate-identity",
         {},
         {
           headers: {
@@ -72,7 +72,7 @@ export default function HeroSection() {
   const handleImportUserIdentity = async () => {
     try {
       const resp = await axios.post(
-        GET_IDENTITY_URL.toString(),
+        PHANTOM_API_URL + "/v1/get-identity",
         {
           mnemonic: importMnemonic,
         },
