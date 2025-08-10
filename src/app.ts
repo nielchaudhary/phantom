@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { Logger } from "./config/logger";
 import { phantomRouter } from "./config/router";
 import { initDB } from "./config/db";
+import { initRedis } from "./config/redis";
 
 dotenv.config();
 const app = express();
@@ -23,6 +24,7 @@ async function initServer() {
 
     try {
       await initDB();
+      await initRedis();
     } catch (error) {
       logger.error("Failed to initialise PhantomDB due to : ", error);
       process.exit(1);
