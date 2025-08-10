@@ -41,7 +41,7 @@ export default function HeroSection() {
   const handleJoinPhantom = async () => {
     try {
       const resp = await axios.post(
-        PHANTOM_API_URL + "/v1/generate-identity",
+        PHANTOM_API_URL + "/phantom/v1/generate-identity",
         {},
         {
           headers: {
@@ -72,7 +72,7 @@ export default function HeroSection() {
   const handleImportUserIdentity = async () => {
     try {
       const resp = await axios.post(
-        PHANTOM_API_URL + "/v1/get-identity",
+        PHANTOM_API_URL + "/phantom/v1/get-identity",
         {
           mnemonic: importMnemonic,
         },

@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function verifyPhantomIdExists(phantomId: string) {
-  const resp = axios.get(PHANTOM_API_URL + "/v1/verify-user-exists", {
+  const resp = axios.get(PHANTOM_API_URL + "/phantom/v1/verify-user-exists", {
     params: {
       phantomId: phantomId,
     },

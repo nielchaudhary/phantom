@@ -3,7 +3,7 @@ import { getErrorText } from "../config/error";
 import { Logger } from "../config/logger";
 import { Request, Response } from "express";
 import { getDBColl, USERS_COLL } from "../config/db";
-import { isNullOrUndefined } from "../config/utils";
+import { isNullOrUndefined, Status } from "../config/utils";
 
 const logger = new Logger("get-status");
 
@@ -37,8 +37,14 @@ export const getStatus = async (
       });
     }
     const status = await redisClient.get(phantomId);
+
+    if (isNullOrUndefined(status)) {
+      return res.status(404).send({
+        error: "User Status Not Found, Please Check Phantom ID again.",
+      });
+    }
     return res.status(200).send({
-      status,
+      status: status as Status,
     });
   } catch (error) {
     logger.error(
