@@ -18,7 +18,9 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   logger.info(`New Connection Established with ID: ${socket.id}`);
   socket.on("message", (message: string) => {
-    logger.info(`Message received from ${socket.id}: ${message}`);
+    logger.info(
+      `Message received from ${socket.id}: ${JSON.stringify(message)}`
+    );
   });
   socket.on("disconnect", () => {
     logger.info(`User disconnected with ID: ${socket.id}`);

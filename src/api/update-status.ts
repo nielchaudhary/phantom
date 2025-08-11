@@ -33,7 +33,7 @@ export const updateStatus = async (
     if (isNullOrUndefined(user)) {
       return res.status(404).send({
         success: false,
-        error: "User Not Found, Please Check Phantom ID again.",
+        error: "User Not Found, Please Check Phantom ID again",
       });
     }
 
@@ -53,14 +53,13 @@ export const updateStatus = async (
     });
   } catch (error) {
     logger.error(
-      "Could not update status due to : ",
-      getErrorText(error as Error),
+      `Could not update status due to : ${getErrorText(error as Error)}`,
       error
     );
 
     return res.status(500).send({
       success: false,
-      error: getErrorText(error as Error),
+      error: `Could not update status due to : ${getErrorText(error as Error)}`,
     });
   }
 };

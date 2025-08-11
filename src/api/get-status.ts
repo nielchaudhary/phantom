@@ -27,7 +27,7 @@ export const getStatus = async (
 
     if (isNullOrUndefined(user)) {
       return res.status(404).send({
-        error: "User Not Found, Please Check Phantom ID again.",
+        error: "User Not Found, Please Check Phantom ID again",
       });
     }
     const redisClient = getRedisClient();
@@ -40,7 +40,7 @@ export const getStatus = async (
 
     if (isNullOrUndefined(status)) {
       return res.status(404).send({
-        error: "User Status Not Found, Please Check Phantom ID again.",
+        error: "User Not Online, Please Ask Recipient to Login",
       });
     }
     return res.status(200).send({

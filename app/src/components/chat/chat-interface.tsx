@@ -7,6 +7,7 @@ import { useAutoScroll } from "../../hooks/use-auto-scroll";
 
 import { ChatInput, EmptyState, MessageBubble } from "./chat-input";
 import { useSocket } from "../../hooks/use-socket";
+import { removeLocalStorageItems } from "../../lib/utils";
 
 /**
  * Simple Two-Person Chat Component - Handles peer-to-peer messaging
@@ -18,8 +19,6 @@ import { useSocket } from "../../hooks/use-socket";
  */
 export const ChatInterface = () => {
   const socket = useSocket();
-
-  // ===== STATE MANAGEMENT =====
 
   // Core chat state - stores all messages in the conversation
   const [messages, setMessages] = useState<Message[]>([]);
@@ -103,7 +102,16 @@ export const ChatInterface = () => {
 
       if (window.confirm("Are you sure you want to leave the chat?")) {
         try {
-          toast.success("Leaving chat session...");
+          toast.success("Leaving chat session...", {
+            duration: 1500,
+            style: {
+              background: "black",
+              color: "white",
+              border: "none",
+            },
+            position: "top-center",
+          });
+          removeLocalStorageItems("targetPhantomId", "phantomIdentity");
 
           setIsChatActive(false);
           navigate("/");

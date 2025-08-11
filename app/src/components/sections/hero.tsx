@@ -3,14 +3,20 @@ import { motion } from "framer-motion";
 import { PhantomCometCard } from "../ui/comet-card";
 import { StatefulButton } from "../ui/stateful-button";
 import { useState } from "react";
-import axios from "axios";
 import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { useModal } from "../../hooks/use-modal";
 import Mnemonic, { MnemonicInput } from "../ui/mnemonic";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { PHANTOM_API_URL } from "../../lib/constants";
-import { verifyPhantomIdExists } from "../../lib/utils";
+import {
+  generateIdentity,
+  getIdentity,
+  isAxiosError,
+  Status,
+  updateUserStatus,
+  verifyExistsAndStatus,
+  type ApiErrorResponse,
+} from "../../lib/utils";
 
 interface GenerateIdentityResponse {
   /**
@@ -40,17 +46,8 @@ export default function HeroSection() {
 
   const handleJoinPhantom = async () => {
     try {
-      const resp = await axios.post(
-        PHANTOM_API_URL + "/phantom/v1/generate-identity",
-        {},
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = resp.data;
-      setIdentity(data);
+      const resp = await generateIdentity();
+      setIdentity(resp.data);
       setActiveModal("generate");
 
       // Open modal after a delay to allow for button animation
@@ -70,22 +67,20 @@ export default function HeroSection() {
   };
 
   const handleImportUserIdentity = async () => {
+    if (!importMnemonic) {
+      toast.error("Please enter a valid mnemonic phrase", {
+        position: "top-center",
+      });
+      return;
+    }
+
     try {
-      const resp = await axios.post(
-        PHANTOM_API_URL + "/phantom/v1/get-identity",
-        {
-          mnemonic: importMnemonic,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const resp = await getIdentity(importMnemonic);
       if (resp.status === 200) {
-        const data = resp.data;
-        toast.info(`Welcome Back, ${data.identity.phantomId}`, {
-          duration: 5000,
+        const data = resp.data as { identity: GenerateIdentityResponse };
+        localStorage.setItem("phantomIdentity", JSON.stringify(data.identity));
+        toast.success(`Welcome Back, ${data.identity.phantomId}`, {
+          duration: 1500,
           style: {
             background: "black",
             color: "white",
@@ -94,15 +89,43 @@ export default function HeroSection() {
           position: "top-center",
         });
 
-        setIdentity(data.identity);
+        setTimeout(() => {
+          setIdentity(data.identity);
+          setActiveModal("chat");
+        }, 2000);
 
-        localStorage.setItem("phantomIdentity", JSON.stringify(data.identity));
-
-        setActiveModal("chat");
+        // Update user status after successful identity import
+        try {
+          await updateUserStatus(data.identity.phantomId, Status.ONLINE);
+        } catch (error) {
+          console.error("Update Status failed:", error);
+          toast.error("Update Status failed, Please Refresh the Page", {
+            position: "top-center",
+          });
+        }
+      } else {
+        const errorMessage =
+          (resp.data as ApiErrorResponse)?.error ||
+          "Something went wrong, Please check mnemonic phrase again.";
+        toast.error(errorMessage, {
+          position: "top-center",
+        });
       }
     } catch (error) {
-      console.error("Verification failed:", error);
-      toast.error("Identity verification failed, please check mnemonic phrase");
+      console.error("Identity verification failed:", error);
+      let errorMessage =
+        "Identity verification failed, please check mnemonic phrase";
+
+      if (isAxiosError<ApiErrorResponse>(error)) {
+        errorMessage =
+          error.response?.data?.error || error.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage, {
+        position: "top-center",
+      });
     }
   };
 
@@ -114,8 +137,25 @@ export default function HeroSection() {
       return;
     }
 
+    const phantomId = localStorage.getItem("phantomIdentity");
+
+    if (!phantomId) {
+      toast.error("Please Import Your Identity", {
+        position: "top-center",
+      });
+      return;
+    }
+
+    if (identity.phantomId === targetPhantomId.trim()) {
+      toast.error("Please Enter a different Phantom ID", {
+        position: "top-center",
+      });
+      return;
+    }
+
     try {
-      const resp = await verifyPhantomIdExists(targetPhantomId.trim());
+      const resp = await verifyExistsAndStatus(targetPhantomId.trim());
+
       if (resp.status === 200) {
         localStorage.setItem("targetPhantomId", targetPhantomId.trim());
         toast.success("Valid user, redirecting to chat", {
@@ -137,18 +177,26 @@ export default function HeroSection() {
             },
           });
         }, 2000);
-      } else if (resp.status === 404) {
-        toast.error("User Not Found, Please Check Phantom ID again.", {
-          position: "top-center",
-        });
       } else {
-        toast.error("Something went wrong, Please Check Phantom ID again.", {
+        const errorMessage =
+          (resp.data as ApiErrorResponse)?.error ||
+          "Something went wrong, Please Check Phantom ID again.";
+        toast.error(errorMessage, {
           position: "top-center",
         });
       }
     } catch (error) {
       console.error("Error verifying Phantom ID:", error);
-      toast.error("User Not Found, Please Check Phantom ID again.", {
+      let errorMessage = "User Not Found, Please Check Phantom ID again.";
+
+      if (isAxiosError<ApiErrorResponse>(error)) {
+        errorMessage =
+          error.response?.data?.error || error.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage, {
         position: "top-center",
       });
     }
