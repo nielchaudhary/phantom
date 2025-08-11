@@ -242,11 +242,11 @@ export default function HeroSection() {
           <ModalContent>
             <div className="flex flex-col items-center justify-center p-4">
               <div>
-                <label className="flex items-center gap-2 text-sm text-red-500 font-bold mb-8 text-center">
-                  Store this mnemonic phrase in a safe place, it will be used to
-                  log into the phantom app
+                <label className="flex items-center gap-2 text-sm text-red-500 font-bold mb-6 text-center">
+                  Mnemonic phrase will be used for login, store it in a safe
+                  place
                 </label>
-                <label className="flex justify-center items-center gap-2 text-sm text-gray-300 mb-2 text-center">
+                <label className="flex justify-center items-center gap-2 text-sm text-gray-300 mb-4 text-center">
                   Phantom ID will be used as your public ID to interact with
                   users
                 </label>
