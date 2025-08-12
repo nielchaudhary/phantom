@@ -83,7 +83,7 @@ export const ModalBody = ({
           <motion.div
             ref={modalRef}
             className={cn(
-              "min-h-[30%] max-h-[90%] md:max-w-[50%] py-5 px-3 bg-black dark:bg-black border border-transpxarent dark:border-neutral-800 md:rounded-2xl relative z-50 flex flex-col flex-1 overflow-hidden",
+              "min-h-[30%] max-h-[80%] md:max-w-[40%] py-5 px-3 bg-black dark:bg-black border border-transpxarent dark:border-neutral-800 md:rounded-2xl relative z-50 flex flex-col flex-1 overflow-hidden",
               className
             )}
             initial={{
@@ -140,7 +140,7 @@ export const ModalFooter = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("flex justify-center p-4 bg-black ", className)}>
+    <div className={cn("flex justify-center p-4 bg-black", className)}>
       {children}
     </div>
   );

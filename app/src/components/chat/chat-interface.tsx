@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { IconLogout, IconShieldCheckFilled } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -6,59 +6,31 @@ import { type Message } from "../../lib/chat";
 import { useAutoScroll } from "../../hooks/use-auto-scroll";
 
 import { ChatInput, EmptyState, MessageBubble } from "./chat-input";
-import { useSocket } from "../../hooks/use-socket";
 import { removeLocalStorageItems } from "../../lib/utils";
 
-/**
- * Simple Two-Person Chat Component - Handles peer-to-peer messaging
- * This component manages:
- * - Message state management between two users
- * - Real-time message display
- * - User input handling
- * - Chat session management
- */
 export const ChatInterface = () => {
-  const socket = useSocket();
-
-  // Core chat state - stores all messages in the conversation
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // Current user input being typed
   const [input, setInput] = useState("");
 
-  // Track if chat is active
   const [isChatActive, setIsChatActive] = useState(false);
-
-  // Auto-scroll to bottom when new messages are added
   const messagesEndRef = useAutoScroll(messages);
 
-  // Navigation hook
   const navigate = useNavigate();
 
-  // Check if there are any messages to display
   const hasMessages = messages.length > 0;
 
-  // Check if user can submit message
   const canSubmit = input.trim().length > 0 && isChatActive;
 
-  // Mock user info (you can replace with actual user data)
-  const userInfo = { name: "Current User" };
+  const userInfo = useMemo(() => ({ name: "Current User" }), []);
 
-  /**
-   * CHAT INITIALIZATION:
-   * Set up the chat session when component mounts
-   */
   const startChat = useCallback(() => {
     if (isChatActive) return;
 
     setIsChatActive(true);
   }, [isChatActive]);
 
-  /**
-   * USER INPUT SUBMISSION:
-   * Handle when user sends a message
-   */
-  const handleInputSubmit = useCallback(
+  const handleMessageSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!canSubmit) return;
@@ -72,11 +44,6 @@ export const ChatInterface = () => {
 
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
-
-      if (socket) {
-        console.log("Socket connected");
-        socket.emit("message", userMessage);
-      }
 
       setTimeout(() => {
         const otherUserMessage = {
@@ -92,10 +59,6 @@ export const ChatInterface = () => {
     [canSubmit, input]
   );
 
-  /**
-   * CHAT EXIT:
-   * Handle leaving the chat session
-   */
   const handleExitChat = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -124,12 +87,6 @@ export const ChatInterface = () => {
     [navigate]
   );
 
-  // ===== SIDE EFFECTS =====
-
-  /**
-   * AUTO-START CHAT:
-   * Automatically start chat when component mounts
-   */
   useEffect(() => {
     if (userInfo && !isChatActive) {
       startChat();
@@ -175,7 +132,7 @@ export const ChatInterface = () => {
           <ChatInput
             input={input}
             setInput={setInput}
-            onSubmit={handleInputSubmit}
+            onSubmit={handleMessageSubmit}
           />
         </div>
       </div>

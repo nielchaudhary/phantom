@@ -5,7 +5,7 @@ import { StatefulButton } from "../ui/stateful-button";
 import { useState } from "react";
 import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { useModal } from "../../hooks/use-modal";
-import Mnemonic, { MnemonicInput } from "../ui/mnemonic";
+import { MnemonicInput } from "../ui/mnemonic";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,16 +17,9 @@ import {
   verifyExistsAndStatus,
   type ApiErrorResponse,
 } from "../../lib/utils";
-
-interface GenerateIdentityResponse {
-  /**
-   * A 12-word BIP39 mnemonic phrase, used for generating a key pair.
-   * The mnemonic is used to generate a private key and a public key,
-   * which are then used to create a Phantom identity.
-   */
-  mnemonic: string[];
-  phantomId: string;
-}
+import JoinChat from "../modal/join-chat";
+import type { GenerateIdentityResponse } from "../modal/generate-identity";
+import GenerateIdentity from "../modal/generate-identity";
 
 export default function HeroSection() {
   const navigate = useNavigate();
@@ -39,7 +32,7 @@ export default function HeroSection() {
   const [targetPhantomId, setTargetPhantomId] = useState<string>("");
 
   const [activeModal, setActiveModal] = useState<
-    "generate" | "import" | "chat"
+    "generate" | "import" | "create-chat" | "join-chat"
   >("generate");
 
   const { setOpen } = useModal();
@@ -91,7 +84,7 @@ export default function HeroSection() {
 
         setTimeout(() => {
           setIdentity(data.identity);
-          setActiveModal("chat");
+          setActiveModal("create-chat");
         }, 2000);
 
         // Update user status after successful identity import
@@ -238,44 +231,7 @@ export default function HeroSection() {
 
       {/* Modal with Conditional Content */}
       {activeModal === "generate" ? (
-        <ModalBody>
-          <ModalContent>
-            <div className="flex flex-col items-center justify-center p-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm text-red-500 font-bold mb-6 text-center">
-                  Mnemonic phrase will be used for login, store it in a safe
-                  place
-                </label>
-                <label className="flex justify-center items-center gap-2 text-sm text-gray-300 mb-4 text-center">
-                  Phantom ID will be used as your public ID to interact with
-                  users
-                </label>
-              </div>
-              <div>
-                <p className="flex items-center gap-2 text-sm text-white mb-8 border border-zinc-700 p-2 rounded-lg font-semibold">
-                  Phantom ID : {identity.phantomId}
-                </p>
-              </div>
-
-              <div className="w-full max-w-md">
-                {identity.mnemonic.length > 0 && (
-                  <Mnemonic mnemonic={identity.mnemonic} />
-                )}
-              </div>
-            </div>
-          </ModalContent>
-
-          <ModalFooter>
-            <StatefulButton
-              className="stateful-button"
-              onClick={() => {
-                navigator.clipboard.writeText(identity.mnemonic.join(" "));
-              }}
-            >
-              Copy to Clipboard
-            </StatefulButton>
-          </ModalFooter>
-        </ModalBody>
+        <GenerateIdentity identity={identity} />
       ) : activeModal === "import" ? (
         <ModalBody>
           <ModalContent>
@@ -304,7 +260,7 @@ export default function HeroSection() {
             </StatefulButton>
           </ModalFooter>
         </ModalBody>
-      ) : (
+      ) : activeModal === "create-chat" ? (
         <ModalBody>
           <ModalContent>
             <div className="flex flex-col items-center justify-center p-4">
@@ -327,11 +283,23 @@ export default function HeroSection() {
           </ModalContent>
 
           <ModalFooter>
-            <button className="stateful-button" onClick={handleInviteToChat}>
-              Invite to Chat
-            </button>
+            <div className="flex flex-row gap-6">
+              <button className="stateful-button" onClick={handleInviteToChat}>
+                Invite to Chat
+              </button>
+              <button
+                className="stateful-button"
+                onClick={() => {
+                  setActiveModal("join-chat");
+                }}
+              >
+                Join Chat Room
+              </button>
+            </div>
           </ModalFooter>
         </ModalBody>
+      ) : (
+        <JoinChat />
       )}
     </div>
   );
