@@ -20,10 +20,8 @@ import JoinChat from "../modal/join-chat";
 import type { GenerateIdentityResponse } from "../modal/generate-identity";
 import GenerateIdentity from "../modal/generate-identity";
 import { useSetRecoilState } from "recoil";
-import {
-  ChatIdentityState,
-  type ChatIdentity,
-} from "../../atoms/identity-atom";
+import { ChatIdentityState, type ChatIdentity } from "../../atoms/identity";
+import { LoginState } from "../../atoms/login";
 
 export default function HeroSection() {
   const navigate = useNavigate();
@@ -38,6 +36,8 @@ export default function HeroSection() {
 
   const [importMnemonic, setImportMnemonic] = useState<string[]>([]);
   const [targetPhantomId, setTargetPhantomId] = useState<string>("");
+
+  const setLoginState = useSetRecoilState(LoginState);
 
   const [activeModal, setActiveModal] = useState<
     "generate" | "import" | "create-chat" | "join-chat"
@@ -82,6 +82,8 @@ export default function HeroSection() {
         const data = resp.data as { identity: GenerateIdentityResponse };
         localStorage.setItem("phantomIdentity", JSON.stringify(data.identity));
         showSuccessToast(`Welcome Back, ${data.identity.phantomId}`, 1500);
+
+        setLoginState({ phantomId: data.identity.phantomId });
 
         setTimeout(() => {
           setIdentity(data.identity);

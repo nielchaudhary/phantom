@@ -4,13 +4,20 @@ import { StatefulButton } from "../ui/stateful-button";
 import { useNavigate } from "react-router-dom";
 import type { ApiErrorResponse } from "../../lib/utils";
 import { isAxiosError } from "axios";
+import { useRecoilValue } from "recoil";
+import { LoginState } from "../../atoms/login";
+import { useState } from "react";
 
 export default function JoinChat() {
   const navigate = useNavigate();
 
+  const loginState = useRecoilValue(LoginState);
+
+  const [chatId, setChatId] = useState<string>("");
+
   const handleJoinChat = async () => {
     try {
-      const resp = await getInvite("receiver", "chatId");
+      const resp = await getInvite(loginState.phantomId, chatId);
       if (resp.status === 200) {
         showSuccessToast("Invitation Valid, Joining Chat Room", 1500);
 
@@ -46,6 +53,9 @@ export default function JoinChat() {
             <input
               type="text"
               placeholder="Enter Chat Room ID"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setChatId(e.target.value)
+              }
               className="w-full px-4 py-2 text-sm border border-zinc-700 bg-zinc-800 text-white rounded-lg focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 text-center -mb-12"
             />
           </div>
@@ -55,7 +65,7 @@ export default function JoinChat() {
       <ModalFooter>
         <StatefulButton
           className="stateful-button max-w-[40%] -mt-6"
-          onClick={() => handleJoinChat()}
+          onClick={handleJoinChat}
         >
           Join Chat
         </StatefulButton>
