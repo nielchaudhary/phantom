@@ -10,6 +10,7 @@ const logger = new Logger("DB");
 const mongoURI = process.env.mongoURI;
 export const DB_NAME = "phantomDB";
 export const USERS_COLL = "users";
+export const INVITES_COLL = "invites";
 
 class DB {
   public static users: Collection<MongoDBDoc>;

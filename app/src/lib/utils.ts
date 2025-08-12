@@ -101,6 +101,19 @@ export async function getIdentity(mnemonic: string[]) {
   return resp;
 }
 
+export async function getInvite(receiver: string, chatId: string) {
+  const resp = await axios.get(PHANTOM_API_URL + "/phantom/v1/get-invite", {
+    params: {
+      receiver,
+      chatId,
+    },
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return resp;
+}
+
 export function showSuccessToast(message: string, duration: number) {
   toast.success(message, {
     duration,
