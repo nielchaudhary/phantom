@@ -2,6 +2,7 @@ import { ChatInterface } from "../components/chat/chat-interface";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import SocketProvider from "../context/socket";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -30,8 +31,10 @@ export default function Chat() {
   }
 
   return (
-    <div className="w-full flex justify-center items-start pt-10 pb-4 px-4 min-h-screen home-page-bg">
-      <ChatInterface />
-    </div>
+    <SocketProvider>
+      <div className="w-full flex justify-center items-start pt-10 pb-4 px-4 min-h-screen home-page-bg">
+        <ChatInterface />
+      </div>
+    </SocketProvider>
   );
 }
