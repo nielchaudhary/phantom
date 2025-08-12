@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import axios, { AxiosError } from "axios";
 import { PHANTOM_API_URL } from "./constants";
+import { toast } from "sonner";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -26,7 +27,7 @@ export function removeLocalStorageItems(...keys: string[]) {
   keys.forEach((key) => localStorage.removeItem(key));
 }
 
-export async function verifyExistsAndStatus(phantomId: string) {
+export async function verifyUserExists(phantomId: string) {
   const resp = await axios.get(PHANTOM_API_URL + "/phantom/v1/get-status", {
     params: {
       phantomId: phantomId,
@@ -98,4 +99,23 @@ export async function getIdentity(mnemonic: string[]) {
     }
   );
   return resp;
+}
+
+export function showSuccessToast(message: string, duration: number) {
+  toast.success(message, {
+    duration,
+    style: {
+      background: "black",
+      color: "white",
+      border: "none",
+    },
+    position: "top-center",
+  });
+}
+
+export function showErrorToast(message: string, duration: number) {
+  toast.error(message, {
+    duration,
+    position: "top-center",
+  });
 }

@@ -1,15 +1,24 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { IconLogout, IconShieldCheckFilled } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { type Message } from "../../lib/chat";
 import { useAutoScroll } from "../../hooks/use-auto-scroll";
 
 import { ChatInput, EmptyState, MessageBubble } from "./chat-input";
-import { removeLocalStorageItems } from "../../lib/utils";
+import {
+  removeLocalStorageItems,
+  showSuccessToast,
+  showErrorToast,
+} from "../../lib/utils";
+import { useRecoilValue } from "recoil";
+import { ChatIdentityState } from "../../atoms/identity-atom";
+import { useSocket } from "../../hooks/use-socket";
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const chatIdentityState = useRecoilValue(ChatIdentityState);
+
+  const socket = useSocket();
 
   const [input, setInput] = useState("");
 
@@ -45,6 +54,12 @@ export const ChatInterface = () => {
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
 
+      socket?.emit("message", {
+        chatId: chatIdentityState.targetPhantomId,
+        message: userMessage,
+        sender: chatIdentityState.senderPhantomId,
+      });
+
       setTimeout(() => {
         const otherUserMessage = {
           id: `msg_${Date.now()}_other`,
@@ -65,27 +80,38 @@ export const ChatInterface = () => {
 
       if (window.confirm("Are you sure you want to leave the chat?")) {
         try {
-          toast.success("Leaving chat session...", {
-            duration: 1500,
-            style: {
-              background: "black",
-              color: "white",
-              border: "none",
-            },
-            position: "top-center",
-          });
+          showSuccessToast("Leaving chat session...", 1500);
           removeLocalStorageItems("targetPhantomId", "phantomIdentity");
 
           setIsChatActive(false);
           navigate("/");
         } catch (error) {
           console.error("Error leaving chat:", error);
-          toast.error("Error leaving chat session");
+          showErrorToast("Error leaving chat session", 1500);
         }
       }
     },
     [navigate]
   );
+  useEffect(() => {
+    if (
+      !chatIdentityState.senderPhantomId ||
+      !chatIdentityState.targetPhantomId
+    ) {
+      showErrorToast(
+        "Chat identity not found, Please Import Identity & Choose Recipient Phantom ID",
+        2000
+      );
+      navigate("/");
+      return;
+    }
+
+    socket?.emit("create-room", {
+      chatId: `${chatIdentityState.senderPhantomId}-${chatIdentityState.targetPhantomId}`,
+      sender: chatIdentityState.senderPhantomId,
+      receiver: chatIdentityState.targetPhantomId,
+    });
+  }, [chatIdentityState, socket]);
 
   useEffect(() => {
     if (userInfo && !isChatActive) {

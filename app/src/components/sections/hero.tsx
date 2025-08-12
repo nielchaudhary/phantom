@@ -6,23 +6,31 @@ import { useState } from "react";
 import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { useModal } from "../../hooks/use-modal";
 import { MnemonicInput } from "../ui/mnemonic";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
+  showSuccessToast,
+  showErrorToast,
   generateIdentity,
   getIdentity,
   isAxiosError,
-  Status,
-  updateUserStatus,
-  verifyExistsAndStatus,
+  verifyUserExists,
   type ApiErrorResponse,
 } from "../../lib/utils";
 import JoinChat from "../modal/join-chat";
 import type { GenerateIdentityResponse } from "../modal/generate-identity";
 import GenerateIdentity from "../modal/generate-identity";
+import { useSetRecoilState } from "recoil";
+import {
+  ChatIdentityState,
+  type ChatIdentity,
+} from "../../atoms/identity-atom";
 
 export default function HeroSection() {
   const navigate = useNavigate();
+
+  const setChatIdentityState =
+    useSetRecoilState<ChatIdentity>(ChatIdentityState);
+
   const [identity, setIdentity] = useState<GenerateIdentityResponse>({
     mnemonic: [],
     phantomId: "",
@@ -47,10 +55,13 @@ export default function HeroSection() {
       setTimeout(() => {
         setOpen(true);
       }, 1000);
-      toast.success("Identity Generated Successfully");
+      showSuccessToast("Identity Generated Successfully", 1000);
     } catch (error) {
       console.error("Identity Generation Failed", error);
-      toast.error("Identity Generation Failed, Please Refresh the Page");
+      showErrorToast(
+        "Identity Generation Failed, Please Refresh the Page",
+        1500
+      );
     }
   };
 
@@ -61,9 +72,7 @@ export default function HeroSection() {
 
   const handleImportUserIdentity = async () => {
     if (!importMnemonic) {
-      toast.error("Please enter a valid mnemonic phrase", {
-        position: "top-center",
-      });
+      showErrorToast("Please enter a valid mnemonic phrase", 1500);
       return;
     }
 
@@ -72,37 +81,17 @@ export default function HeroSection() {
       if (resp.status === 200) {
         const data = resp.data as { identity: GenerateIdentityResponse };
         localStorage.setItem("phantomIdentity", JSON.stringify(data.identity));
-        toast.success(`Welcome Back, ${data.identity.phantomId}`, {
-          duration: 1500,
-          style: {
-            background: "black",
-            color: "white",
-            border: "none",
-          },
-          position: "top-center",
-        });
+        showSuccessToast(`Welcome Back, ${data.identity.phantomId}`, 1500);
 
         setTimeout(() => {
           setIdentity(data.identity);
           setActiveModal("create-chat");
         }, 2000);
-
-        // Update user status after successful identity import
-        try {
-          await updateUserStatus(data.identity.phantomId, Status.ONLINE);
-        } catch (error) {
-          console.error("Update Status failed:", error);
-          toast.error("Update Status failed, Please Refresh the Page", {
-            position: "top-center",
-          });
-        }
       } else {
         const errorMessage =
           (resp.data as ApiErrorResponse)?.error ||
           "Something went wrong, Please check mnemonic phrase again.";
-        toast.error(errorMessage, {
-          position: "top-center",
-        });
+        showErrorToast(errorMessage, 1500);
       }
     } catch (error) {
       console.error("Identity verification failed:", error);
@@ -116,49 +105,38 @@ export default function HeroSection() {
         errorMessage = error.message;
       }
 
-      toast.error(errorMessage, {
-        position: "top-center",
-      });
+      showErrorToast(errorMessage, 1500);
     }
   };
 
   const handleInviteToChat = async () => {
     if (!targetPhantomId.trim()) {
-      toast.error("Please enter a valid Phantom ID", {
-        position: "top-center",
-      });
+      showErrorToast("Please enter a valid Phantom ID", 1500);
       return;
     }
 
     const phantomId = localStorage.getItem("phantomIdentity");
 
     if (!phantomId) {
-      toast.error("Please Import Your Identity", {
-        position: "top-center",
-      });
+      showErrorToast("Please Import Your Identity", 1500);
       return;
     }
 
     if (identity.phantomId === targetPhantomId.trim()) {
-      toast.error("Please Enter a different Phantom ID", {
-        position: "top-center",
-      });
+      showErrorToast("Please Enter a different Phantom ID", 1500);
       return;
     }
 
     try {
-      const resp = await verifyExistsAndStatus(targetPhantomId.trim());
+      const resp = await verifyUserExists(targetPhantomId.trim());
 
       if (resp.status === 200) {
         localStorage.setItem("targetPhantomId", targetPhantomId.trim());
-        toast.success("Valid user, redirecting to chat", {
-          duration: 1500,
-          style: {
-            background: "black",
-            color: "white",
-            border: "none",
-          },
-          position: "top-center",
+        showSuccessToast("Validated User Details, Redirecting . . .", 1500);
+
+        setChatIdentityState({
+          senderPhantomId: identity.phantomId,
+          targetPhantomId: targetPhantomId.trim(),
         });
 
         setTimeout(() => {
@@ -174,9 +152,7 @@ export default function HeroSection() {
         const errorMessage =
           (resp.data as ApiErrorResponse)?.error ||
           "Something went wrong, Please Check Phantom ID again.";
-        toast.error(errorMessage, {
-          position: "top-center",
-        });
+        showErrorToast(errorMessage, 1500);
       }
     } catch (error) {
       console.error("Error verifying Phantom ID:", error);
@@ -189,9 +165,7 @@ export default function HeroSection() {
         errorMessage = error.message;
       }
 
-      toast.error(errorMessage, {
-        position: "top-center",
-      });
+      showErrorToast(errorMessage, 1500);
     }
   };
 
