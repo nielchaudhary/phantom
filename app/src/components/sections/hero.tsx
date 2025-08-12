@@ -20,7 +20,10 @@ import JoinChat from "../modal/join-chat";
 import type { GenerateIdentityResponse } from "../modal/generate-identity";
 import GenerateIdentity from "../modal/generate-identity";
 import { useSetRecoilState } from "recoil";
-import { ChatIdentityState, type ChatIdentity } from "../../atoms/identity";
+import {
+  ChatIdentityState,
+  type ChatIdentity,
+} from "../../atoms/chat-identity";
 import { LoginState } from "../../atoms/login";
 
 export default function HeroSection() {

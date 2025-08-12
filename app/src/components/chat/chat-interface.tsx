@@ -11,7 +11,7 @@ import {
   showErrorToast,
 } from "../../lib/utils";
 import { useRecoilValue } from "recoil";
-import { ChatIdentityState } from "../../atoms/identity";
+import { ChatIdentityState } from "../../atoms/chat-identity";
 import { useSocket } from "../../hooks/use-socket";
 
 export const ChatInterface = () => {
