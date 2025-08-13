@@ -5,6 +5,7 @@ import { Logger } from "./config/logger";
 import { phantomRouter } from "./config/router";
 import { initDB } from "./config/db";
 import { initRedis } from "./config/redis";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 const app = express();
@@ -14,11 +15,12 @@ const PORT = process.env.PORT || 8090;
 async function initServer() {
   try {
     app.use(express.json());
+    app.use(cookieParser());
     app.use(
       cors({
         origin: "*",
-        methods: "*",
         allowedHeaders: "*",
+        credentials: true,
       })
     );
 

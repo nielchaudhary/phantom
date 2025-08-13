@@ -4,10 +4,13 @@ import { Request, Response } from "express";
 import { PhantomIdentity, PhantomIdentityGenerator } from "../config/identity";
 import { getDBColl, USERS_COLL } from "../config/db";
 import { isNullOrUndefined } from "../config/utils";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
 const logger = new Logger("get-identity");
 
-export const getIdentity = async (req: Request, res: Response) => {
+export const authenticateUser = async (req: Request, res: Response) => {
   try {
     const { mnemonic } = req.body as { mnemonic: string[] };
 
@@ -36,11 +39,30 @@ export const getIdentity = async (req: Request, res: Response) => {
       });
     }
 
+    const jwtSecret = process.env.JWT_SECRET;
+    if (isNullOrUndefined(jwtSecret)) {
+      return res.status(500).send({
+        message: "JWT Secret not found",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        phantomId: user.phantomId,
+      },
+      jwtSecret,
+      {
+        expiresIn: "24h",
+      }
+    );
+
+    logger.info({ token });
+
     return res.status(200).send({
-      message: "Identity restored successfully",
-      identity: {
-        phantomId: user?.phantomId,
-        publicKey: deriveIdentity.publicKey,
+      message: "User Logged In",
+      userData: {
+        phantomId: user.phantomId,
+        jwtToken: token,
       },
     });
   } catch (error) {

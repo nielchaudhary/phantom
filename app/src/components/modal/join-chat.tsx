@@ -1,46 +1,31 @@
-import { getInvite, showErrorToast, showSuccessToast } from "../../lib/utils";
+import { showErrorToast, showSuccessToast } from "../../lib/utils";
 import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { StatefulButton } from "../ui/stateful-button";
 import { useNavigate } from "react-router-dom";
-import type { ApiErrorResponse } from "../../lib/utils";
-import { isAxiosError } from "axios";
-import { useRecoilValue } from "recoil";
-import { LoginState } from "../../atoms/login";
-import { useState } from "react";
+import { useSocket } from "../../hooks/use-socket";
 
 export default function JoinChat() {
   const navigate = useNavigate();
 
-  const loginState = useRecoilValue(LoginState);
-
-  const [chatId, setChatId] = useState<string>("");
+  const socket = useSocket();
 
   const handleJoinChat = async () => {
     try {
-      const resp = await getInvite(loginState.phantomId, chatId);
-      if (resp.status === 200) {
-        showSuccessToast("Invitation Valid, Joining Chat Room", 1500);
+      // const resp = await getInvite("sda", chatId);
+      showSuccessToast("Invitation Valid, Joining Chat Room", 1500);
 
-        setTimeout(() => {
-          navigate("/chat");
-        }, 2000);
-      } else {
-        const errorMessage =
-          (resp.data as ApiErrorResponse)?.error ||
-          "Something went wrong, Please check Chat Room ID and Phantom ID again.";
-        showErrorToast(errorMessage, 1500);
-      }
+      socket?.emit("join-room", {
+        senderPhantomId: "sda",
+        targetPhantomId: "sda",
+      });
+
+      setTimeout(() => {
+        navigate("/chat");
+      }, 2000);
     } catch (error) {
       console.error("Invite verification failed:", error);
       let errorMessage =
         "Invite verification failed, please check Chat Room ID and Phantom ID again.";
-
-      if (isAxiosError<ApiErrorResponse>(error)) {
-        errorMessage =
-          error.response?.data?.error || error.message || errorMessage;
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
 
       showErrorToast(errorMessage, 1500);
     }
@@ -53,9 +38,6 @@ export default function JoinChat() {
             <input
               type="text"
               placeholder="Enter Chat Room ID"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setChatId(e.target.value)
-              }
               className="w-full px-4 py-2 text-sm border border-zinc-700 bg-zinc-800 text-white rounded-lg focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 text-center -mb-12"
             />
           </div>

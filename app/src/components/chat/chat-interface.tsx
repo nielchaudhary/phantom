@@ -5,20 +5,17 @@ import { type Message } from "../../lib/chat";
 import { useAutoScroll } from "../../hooks/use-auto-scroll";
 
 import { ChatInput, EmptyState, MessageBubble } from "./chat-input";
-import {
-  removeLocalStorageItems,
-  showSuccessToast,
-  showErrorToast,
-} from "../../lib/utils";
-import { useRecoilValue } from "recoil";
-import { ChatIdentityState } from "../../atoms/chat-identity";
+import { showSuccessToast, showErrorToast } from "../../lib/utils";
 import { useSocket } from "../../hooks/use-socket";
+import { useRecoilValue } from "recoil";
+import { ChatCreatorState, type ChatCreator } from "../../atoms/chat-identity";
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const chatIdentityState = useRecoilValue(ChatIdentityState);
 
   const socket = useSocket();
+
+  const chatCreatorState = useRecoilValue<ChatCreator>(ChatCreatorState);
 
   const [input, setInput] = useState("");
 
@@ -54,12 +51,6 @@ export const ChatInterface = () => {
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
 
-      socket?.emit("message", {
-        chatId: chatIdentityState.targetPhantomId,
-        message: userMessage,
-        sender: chatIdentityState.senderPhantomId,
-      });
-
       setTimeout(() => {
         const otherUserMessage = {
           id: `msg_${Date.now()}_other`,
@@ -81,7 +72,6 @@ export const ChatInterface = () => {
       if (window.confirm("Are you sure you want to leave the chat?")) {
         try {
           showSuccessToast("Leaving chat session...", 1500);
-          removeLocalStorageItems("targetPhantomId", "phantomIdentity");
 
           setIsChatActive(false);
           navigate("/");
@@ -93,29 +83,15 @@ export const ChatInterface = () => {
     },
     [navigate]
   );
-  useEffect(() => {
-    if (
-      !chatIdentityState.senderPhantomId ||
-      !chatIdentityState.targetPhantomId
-    ) {
-      showErrorToast(
-        "Chat identity not found, Please Import Identity & Choose Recipient Phantom ID",
-        2000
-      );
-      navigate("/");
-      return;
-    }
-
-    socket?.emit("create-room", {
-      chatId: `${chatIdentityState.senderPhantomId}-${chatIdentityState.targetPhantomId}`,
-      sender: chatIdentityState.senderPhantomId,
-      receiver: chatIdentityState.targetPhantomId,
-    });
-  }, [chatIdentityState, socket]);
 
   useEffect(() => {
     if (userInfo && !isChatActive) {
       startChat();
+      socket?.emit("create-room", {
+        roomId: chatCreatorState.roomId,
+        senderPhantomId: chatCreatorState.loggedInUser,
+        receiverPhantomId: chatCreatorState.targetUser,
+      });
     }
   }, [userInfo, isChatActive, startChat]);
 

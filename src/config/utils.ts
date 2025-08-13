@@ -5,15 +5,10 @@ export const isNullOrUndefined = (value: any): value is null | undefined => {
   return value === null || value === undefined;
 };
 
-export enum Status {
-  ONLINE = "Online",
-  OFFLINE = "Offline",
-}
-
 export interface Invite {
-  chatId: string;
-  sender: string;
-  receiver: string;
+  roomId: string;
+  senderPhantomId: string;
+  receiverPhantomId: string;
   ctime: Date;
 }
 
@@ -27,7 +22,7 @@ export const addInviteToDB = async (invite: Invite) => {
     });
 
     logger.info(
-      `Invite for user ${invite.receiver} Added to the DB successfully`
+      `Invite for user ${invite.receiverPhantomId} Added to the DB successfully`
     );
   } catch (error) {
     logger.error(`Error Adding Invite to the DB due to ${error}`);

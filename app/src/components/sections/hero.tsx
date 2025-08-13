@@ -7,40 +7,36 @@ import { ModalBody, ModalContent, ModalFooter } from "../ui/animated-modal";
 import { useModal } from "../../hooks/use-modal";
 import { MnemonicInput } from "../ui/mnemonic";
 import { useNavigate } from "react-router-dom";
+import { nanoid } from "nanoid";
 import {
   showSuccessToast,
   showErrorToast,
   generateIdentity,
-  getIdentity,
-  isAxiosError,
-  verifyUserExists,
-  type ApiErrorResponse,
+  authenticateUser,
+  type authenticateUserResponse,
+  fetchPhantomUser,
+  getUserData,
 } from "../../lib/utils";
 import JoinChat from "../modal/join-chat";
 import type { GenerateIdentityResponse } from "../modal/generate-identity";
 import GenerateIdentity from "../modal/generate-identity";
+
+import { handleFrontendError } from "../../lib/error";
 import { useSetRecoilState } from "recoil";
-import {
-  ChatIdentityState,
-  type ChatIdentity,
-} from "../../atoms/chat-identity";
-import { LoginState } from "../../atoms/login";
+import { ChatCreatorState, type ChatCreator } from "../../atoms/chat-identity";
 
 export default function HeroSection() {
   const navigate = useNavigate();
-
-  const setChatIdentityState =
-    useSetRecoilState<ChatIdentity>(ChatIdentityState);
 
   const [identity, setIdentity] = useState<GenerateIdentityResponse>({
     mnemonic: [],
     phantomId: "",
   });
 
+  const setChatCreatorState = useSetRecoilState<ChatCreator>(ChatCreatorState);
+
   const [importMnemonic, setImportMnemonic] = useState<string[]>([]);
   const [targetPhantomId, setTargetPhantomId] = useState<string>("");
-
-  const setLoginState = useSetRecoilState(LoginState);
 
   const [activeModal, setActiveModal] = useState<
     "generate" | "import" | "create-chat" | "join-chat"
@@ -54,10 +50,7 @@ export default function HeroSection() {
       setIdentity(resp.data);
       setActiveModal("generate");
 
-      // Open modal after a delay to allow for button animation
-      setTimeout(() => {
-        setOpen(true);
-      }, 1000);
+      setOpen(true);
       showSuccessToast("Identity Generated Successfully", 1000);
     } catch (error) {
       console.error("Identity Generation Failed", error);
@@ -68,11 +61,6 @@ export default function HeroSection() {
     }
   };
 
-  const handleImportClick = () => {
-    setActiveModal("import");
-    setOpen(true);
-  };
-
   const handleImportUserIdentity = async () => {
     if (!importMnemonic) {
       showErrorToast("Please enter a valid mnemonic phrase", 1500);
@@ -80,37 +68,26 @@ export default function HeroSection() {
     }
 
     try {
-      const resp = await getIdentity(importMnemonic);
+      const resp = await authenticateUser(importMnemonic);
       if (resp.status === 200) {
-        const data = resp.data as { identity: GenerateIdentityResponse };
-        localStorage.setItem("phantomIdentity", JSON.stringify(data.identity));
-        showSuccessToast(`Welcome Back, ${data.identity.phantomId}`, 1500);
+        const data = resp.data as authenticateUserResponse;
 
-        setLoginState({ phantomId: data.identity.phantomId });
+        showSuccessToast(`Welcome Back, ${data.userData.phantomId}`, 1500);
+        setIdentity({
+          mnemonic: [],
+          phantomId: data.userData.phantomId,
+        });
 
-        setTimeout(() => {
-          setIdentity(data.identity);
-          setActiveModal("create-chat");
-        }, 2000);
-      } else {
-        const errorMessage =
-          (resp.data as ApiErrorResponse)?.error ||
-          "Something went wrong, Please check mnemonic phrase again.";
-        showErrorToast(errorMessage, 1500);
+        sessionStorage.setItem("auth_token", data.userData.jwtToken);
+
+        setActiveModal("create-chat");
       }
     } catch (error) {
       console.error("Identity verification failed:", error);
-      let errorMessage =
-        "Identity verification failed, please check mnemonic phrase";
-
-      if (isAxiosError<ApiErrorResponse>(error)) {
-        errorMessage =
-          error.response?.data?.error || error.message || errorMessage;
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      showErrorToast(errorMessage, 1500);
+      handleFrontendError(
+        error as Error,
+        "Identity verification failed, please check mnemonic phrase"
+      );
     }
   };
 
@@ -120,57 +97,76 @@ export default function HeroSection() {
       return;
     }
 
-    const phantomId = localStorage.getItem("phantomIdentity");
-
-    if (!phantomId) {
-      showErrorToast("Please Import Your Identity", 1500);
-      return;
-    }
-
-    if (identity.phantomId === targetPhantomId.trim()) {
-      showErrorToast("Please Enter a different Phantom ID", 1500);
+    if (!sessionStorage.getItem("auth_token")) {
+      showErrorToast("Please login first", 1500);
+      setActiveModal("import");
       return;
     }
 
     try {
-      const resp = await verifyUserExists(targetPhantomId.trim());
+      const resp = await fetchPhantomUser(
+        targetPhantomId.trim(),
+        sessionStorage.getItem("auth_token") as string
+      );
 
       if (resp.status === 200) {
-        localStorage.setItem("targetPhantomId", targetPhantomId.trim());
-        showSuccessToast("Validated User Details, Redirecting . . .", 1500);
+        showSuccessToast("Validated User Details, Redirecting . . .", 500);
 
-        setChatIdentityState({
-          senderPhantomId: identity.phantomId,
-          targetPhantomId: targetPhantomId.trim(),
+        const roomId = nanoid();
+
+        setChatCreatorState({
+          isCreator: true,
+          loggedInUser: identity.phantomId,
+          targetUser: targetPhantomId.trim(),
+          roomId,
         });
 
-        setTimeout(() => {
-          setOpen(false);
-          navigate("/chat", {
-            state: {
-              identity: identity,
-              targetPhantomId: targetPhantomId.trim(),
-            },
-          });
-        }, 2000);
-      } else {
-        const errorMessage =
-          (resp.data as ApiErrorResponse)?.error ||
-          "Something went wrong, Please Check Phantom ID again.";
-        showErrorToast(errorMessage, 1500);
+        setOpen(false);
+        navigate(`/chat?roomId=${roomId}`);
       }
     } catch (error) {
       console.error("Error verifying Phantom ID:", error);
       let errorMessage = "User Not Found, Please Check Phantom ID again.";
+      handleFrontendError(error as Error, errorMessage);
+    }
+  };
 
-      if (isAxiosError<ApiErrorResponse>(error)) {
-        errorMessage =
-          error.response?.data?.error || error.message || errorMessage;
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
+  const handleExistingUser = async () => {
+    if (sessionStorage.getItem("auth_token")) {
+      try {
+        const resp = await getUserData(
+          sessionStorage.getItem("auth_token") as string
+        );
+
+        if (resp.status === 200) {
+          showSuccessToast(
+            `Welcome Back, ${resp.data.userData.phantomId}`,
+            1500
+          );
+          setIdentity({
+            mnemonic: [],
+            phantomId: resp.data.userData.phantomId,
+          });
+          setChatCreatorState({
+            isCreator: false,
+            loggedInUser: resp.data.userData.phantomId,
+            targetUser: "",
+            roomId: "",
+          });
+
+          setActiveModal("create-chat");
+          setOpen(true);
+        }
+      } catch (error) {
+        console.error("Error verifying Phantom ID:", error);
+        let errorMessage =
+          "User Not Found, Please Login with correct Credentials.";
+        handleFrontendError(error as Error, errorMessage);
+        setActiveModal("import");
       }
-
-      showErrorToast(errorMessage, 1500);
+    } else {
+      setActiveModal("import");
+      setOpen(true);
     }
   };
 
@@ -201,7 +197,7 @@ export default function HeroSection() {
           </StatefulButton>
           <button
             className="w-60 transform rounded-lg bg-white px-3 py-2 text-sm border border-zinc-700 text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-700 dark:bg-white dark:text-black cursor-pointer rounded-xl leading-7 font-sans"
-            onClick={handleImportClick}
+            onClick={handleExistingUser}
           >
             I have an account
           </button>
@@ -262,7 +258,7 @@ export default function HeroSection() {
           </ModalContent>
 
           <ModalFooter>
-            <div className="flex flex-row gap-6">
+            <div className="flex justify-center flex-row gap-4 max-w-[90%]">
               <button className="stateful-button" onClick={handleInviteToChat}>
                 Invite to Chat
               </button>

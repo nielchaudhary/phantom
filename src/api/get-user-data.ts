@@ -1,26 +1,31 @@
 import { Logger } from "../config/logger";
 import { getErrorText } from "../config/error";
 import { Request, Response } from "express";
-import { PhantomIdentity, PhantomIdentityGenerator } from "../config/identity";
+import { PhantomIdentity } from "../config/identity";
 import { getDBColl, USERS_COLL } from "../config/db";
 import { isNullOrUndefined } from "../config/utils";
+import jwt from "jsonwebtoken";
 
 const logger = new Logger("verify-user-exists");
 
-export const verifyUserExists = async (req: Request, res: Response) => {
+export const getUserData = async (req: Request, res: Response) => {
   try {
-    const { phantomId } = req.query as { phantomId: string };
+    const { token } = req.query as { token: string };
 
-    if (!phantomId) {
+    if (!token) {
       return res.status(400).send({
-        message: "Invalid Phantom ID",
+        message: "Invalid Token",
       });
     }
+
+    const decodedUser = jwt.verify(token, process.env.JWT_SECRET as string) as {
+      phantomId: string;
+    };
 
     const usersColl = await getDBColl<Partial<PhantomIdentity>>(USERS_COLL);
 
     const user = await usersColl.findOne({
-      phantomId: phantomId,
+      phantomId: decodedUser.phantomId,
     });
 
     if (isNullOrUndefined(user)) {
@@ -31,6 +36,9 @@ export const verifyUserExists = async (req: Request, res: Response) => {
 
     return res.status(200).send({
       message: "User Found",
+      userData: {
+        phantomId: user.phantomId,
+      },
     });
   } catch (error) {
     logger.error(

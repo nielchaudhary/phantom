@@ -8,32 +8,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export interface ApiErrorResponse {
-  error: string;
-}
-
-export const Status = {
-  ONLINE: "online",
-  OFFLINE: "offline",
-} as const;
-
-export type Status = (typeof Status)[keyof typeof Status];
-
 export function isAxiosError<T>(error: unknown): error is AxiosError<T> {
   return (error as AxiosError).isAxiosError !== undefined;
 }
 
-export function removeLocalStorageItems(...keys: string[]) {
-  keys.forEach((key) => localStorage.removeItem(key));
-}
-
-export async function verifyUserExists(phantomId: string) {
-  const resp = await axios.get(PHANTOM_API_URL + "/phantom/v1/get-status", {
+export async function fetchPhantomUser(targetPhantomId: string, token: string) {
+  const resp = await axios.get(PHANTOM_API_URL + "/phantom/v1/fetch-user", {
     params: {
-      phantomId: phantomId,
+      targetPhantomId,
     },
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -45,23 +31,6 @@ export async function verifyUserIdentity(mnemonic: string[]) {
     PHANTOM_API_URL + "/phantom/v1/get-identity",
     {
       mnemonic,
-    },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  return resp;
-}
-
-export async function updateUserStatus(phantomId: string, status: string) {
-  const resp = await axios.post(
-    PHANTOM_API_URL + "/phantom/v1/update-status",
-    {
-      phantomId,
-      status,
     },
     {
       headers: {
@@ -86,9 +55,9 @@ export async function generateIdentity() {
   return resp;
 }
 
-export async function getIdentity(mnemonic: string[]) {
+export async function authenticateUser(mnemonic: string[]) {
   const resp = await axios.post(
-    PHANTOM_API_URL + "/phantom/v1/get-identity",
+    PHANTOM_API_URL + "/phantom/v1/auth",
     {
       mnemonic,
     },
@@ -102,10 +71,25 @@ export async function getIdentity(mnemonic: string[]) {
 }
 
 export async function getInvite(receiver: string, chatId: string) {
-  const resp = await axios.get(PHANTOM_API_URL + "/phantom/v1/get-invite", {
+  const resp: authenticateUserResponse = await axios.get(
+    PHANTOM_API_URL + "/phantom/v1/get-invite",
+    {
+      params: {
+        receiver,
+        chatId,
+      },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return resp;
+}
+
+export async function getUserData(token: string) {
+  const resp = await axios.get(PHANTOM_API_URL + "/phantom/v1/get-user-data", {
     params: {
-      receiver,
-      chatId,
+      token,
     },
     headers: {
       "Content-Type": "application/json",
@@ -130,5 +114,16 @@ export function showErrorToast(message: string, duration: number) {
   toast.error(message, {
     duration,
     position: "top-center",
+    style: {
+      border: "none",
+    },
   });
+}
+
+export interface authenticateUserResponse {
+  message: string;
+  userData: {
+    phantomId: string;
+    jwtToken: string;
+  };
 }

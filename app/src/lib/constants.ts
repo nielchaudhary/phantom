@@ -1,1 +1,1 @@
-export const PHANTOM_API_URL = "https://phantom-18fu.onrender.com";
+export const PHANTOM_API_URL = "http://localhost:8090";

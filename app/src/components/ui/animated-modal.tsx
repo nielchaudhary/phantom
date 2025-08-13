@@ -3,7 +3,6 @@ import { cn } from "../../lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ModalContext, useModal } from "../../hooks/use-modal";
-import { useOutsideClick } from "../../hooks/use-outside-click";
 
 export const ModalProvider = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
@@ -58,8 +57,6 @@ export const ModalBody = ({
   }, [open]);
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const { setOpen } = useModal();
-  useOutsideClick(modalRef, () => setOpen(false));
 
   return (
     <AnimatePresence>

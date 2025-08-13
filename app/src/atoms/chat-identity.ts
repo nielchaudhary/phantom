@@ -12,3 +12,20 @@ export const ChatIdentityState = atom<ChatIdentity>({
     targetPhantomId: "",
   },
 });
+
+export interface ChatCreator {
+  isCreator: boolean;
+  loggedInUser: string;
+  targetUser: string;
+  roomId: string;
+}
+
+export const ChatCreatorState = atom<ChatCreator>({
+  key: "ChatCreatorState",
+  default: {
+    isCreator: false,
+    loggedInUser: "",
+    targetUser: "",
+    roomId: "",
+  },
+});
