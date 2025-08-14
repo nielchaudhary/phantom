@@ -29,42 +29,66 @@ async function startServer() {
       socket.on(
         "create-room",
         async ({ roomId, senderPhantomId, receiverPhantomId }) => {
-          socket.join(roomId);
-          logger.info(
-            `Room Created with ID: ${roomId} by ${senderPhantomId}, receiver: ${receiverPhantomId}`
-          );
+          try {
+            if (!roomId || !senderPhantomId || !receiverPhantomId) {
+              logger.error("Missing required parameters for room creation", {
+                roomId,
+                senderPhantomId,
+                receiverPhantomId,
+              });
+              socket.emit("error", { message: "Missing required parameters" });
+              return;
+            }
 
-          const invite: Invite = {
-            roomId,
-            senderPhantomId,
-            receiverPhantomId,
-            ctime: new Date(),
-          };
+            socket.join(roomId);
+            logger.info(
+              `Room Created with ID: ${roomId} by ${senderPhantomId}, receiver: ${receiverPhantomId}`
+            );
 
-          await addInviteToDB(invite);
+            const invite: Invite = {
+              roomId,
+              senderPhantomId,
+              receiverPhantomId,
+              ctime: new Date(),
+            };
 
-          logger.info("Invite Added to DB!", invite);
+            const result = await addInviteToDB(invite);
 
-          io.to(roomId).emit("room-created", {
-            roomId,
-            creator: senderPhantomId,
-          });
+            logger.info("Invite successfully added to DB!", { invite, result });
+
+            io.to(roomId).emit("room-created", {
+              roomId,
+              creator: senderPhantomId,
+            });
+          } catch (error) {
+            logger.error("Error in create-room handler:", error);
+            socket.emit("error", { message: "Failed to create room" });
+          }
         }
       );
 
       socket.on("join-room", ({ roomId, username }) => {
-        socket.join(roomId);
-        logger.info(`User ${username} joined room with ID: ${roomId}`);
+        try {
+          socket.join(roomId);
+          logger.info(`User ${username} joined room with ID: ${roomId}`);
 
-        io.to(roomId).emit("user-joined", { roomId, username });
+          io.to(roomId).emit("user-joined", { roomId, username });
+        } catch (error) {
+          logger.error("Error in join-room handler:", error);
+          socket.emit("error", { message: "Failed to join room" });
+        }
       });
 
       socket.on("message", ({ chatId, message, sender }) => {
-        logger.info(
-          `Message from ${sender} in ${chatId}: ${JSON.stringify(message)}`
-        );
+        try {
+          logger.info(
+            `Message from ${sender} in ${chatId}: ${JSON.stringify(message)}`
+          );
 
-        socket.to(chatId).emit("message", { sender, message });
+          socket.to(chatId).emit("message", { sender, message });
+        } catch (error) {
+          logger.error("Error in message handler:", error);
+        }
       });
 
       socket.on("disconnect", () => {

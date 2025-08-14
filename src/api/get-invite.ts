@@ -7,38 +7,42 @@ import { Invite, isNullOrUndefined } from "../config/utils";
 const logger = new Logger("get-invites");
 
 export const getInvite = async (req: Request, res: Response) => {
-  const { receiver, chatId } = req.query as {
-    receiver: string;
-    chatId: string;
+  const { receiverPhantomId, roomId } = req.query as {
+    receiverPhantomId: string;
+    roomId: string;
   };
   try {
-    if (!receiver || !chatId) {
+    if (!receiverPhantomId || !roomId) {
       return res.status(400).send({
-        error: "Receiver PhantomID and ChatID are required",
+        message: "Receiver PhantomID and RoomID are required",
+        invite: null,
       });
     }
 
     const invitesColl = await getDBColl<Invite>(INVITES_COLL);
 
     const invite = await invitesColl.findOne({
-      chatId,
-      receiver,
+      roomId,
+      receiverPhantomId,
     });
 
     if (isNullOrUndefined(invite)) {
       return res.status(404).send({
-        error: "Invite Not Found, Please Check PhantomID and ChatID again",
+        message: "Invite Not Found, Please Check PhantomID and ChatID again",
+        invite: null,
       });
     }
     return res.status(200).send({
+      message: "Invite fetched successfully",
       invite,
     });
   } catch (error) {
     logger.error(
-      `Could not fetch invite for the user :${receiver} due to ${error}`
+      `Could not fetch invite for the user :${receiverPhantomId} due to ${error}`
     );
     return res.status(500).send({
-      error: getErrorText(error as Error),
+      message: getErrorText(error as Error),
+      invite: null,
     });
   }
 };

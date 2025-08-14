@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { IconLogout, IconShieldCheckFilled } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { type Message } from "../../lib/chat";
@@ -12,27 +12,21 @@ import { ChatCreatorState, type ChatCreator } from "../../atoms/chat-identity";
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isChatActive, setIsChatActive] = useState(false);
 
   const socket = useSocket();
-
   const chatCreatorState = useRecoilValue<ChatCreator>(ChatCreatorState);
-
-  const [input, setInput] = useState("");
-
-  const [isChatActive, setIsChatActive] = useState(false);
   const messagesEndRef = useAutoScroll(messages);
-
   const navigate = useNavigate();
 
+  const roomCreatedRef = useRef(false);
+
   const hasMessages = messages.length > 0;
-
   const canSubmit = input.trim().length > 0 && isChatActive;
-
-  const userInfo = useMemo(() => ({ name: "Current User" }), []);
 
   const startChat = useCallback(() => {
     if (isChatActive) return;
-
     setIsChatActive(true);
   }, [isChatActive]);
 
@@ -54,7 +48,7 @@ export const ChatInterface = () => {
       setTimeout(() => {
         const otherUserMessage = {
           id: `msg_${Date.now()}_other`,
-          role: "client " as const,
+          role: "client" as const,
           content: `${userMessage.content}`,
           timestamp: new Date(),
         };
@@ -72,7 +66,6 @@ export const ChatInterface = () => {
       if (window.confirm("Are you sure you want to leave the chat?")) {
         try {
           showSuccessToast("Leaving chat session...", 1500);
-
           setIsChatActive(false);
           navigate("/");
         } catch (error) {
@@ -84,16 +77,49 @@ export const ChatInterface = () => {
     [navigate]
   );
 
+  // Handle room creation
   useEffect(() => {
-    if (userInfo && !isChatActive) {
-      startChat();
-      socket?.emit("create-room", {
+    if (
+      chatCreatorState.isCreator &&
+      chatCreatorState.roomId &&
+      socket &&
+      !roomCreatedRef.current
+    ) {
+      socket.emit("create-room", {
         roomId: chatCreatorState.roomId,
         senderPhantomId: chatCreatorState.loggedInUser,
         receiverPhantomId: chatCreatorState.targetUser,
       });
+      roomCreatedRef.current = true;
     }
-  }, [userInfo, isChatActive, startChat]);
+  }, [chatCreatorState, socket]);
+
+  //socket error listener
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleError = (error: any) => {
+      console.error("Socket error:", error);
+      showErrorToast(error.message, 1500);
+    };
+
+    socket.on("error", handleError);
+
+    return () => {
+      socket.off("error", handleError);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!isChatActive) {
+      startChat();
+    }
+  }, [isChatActive, startChat]);
+
+  // Reset room created flag when chat creator state changes
+  useEffect(() => {
+    roomCreatedRef.current = false;
+  }, [chatCreatorState.roomId]);
 
   return (
     <div className="flex flex-col h-[90vh] w-full max-w-2xl bg-black rounded-4xl shadow-2xl overflow-hidden">
