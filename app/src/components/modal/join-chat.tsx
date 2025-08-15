@@ -74,7 +74,7 @@ export default function JoinChat() {
 
       setTimeout(() => {
         navigate(`/chat?roomId=${resp.data.invite.roomId}`);
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error("Invite verification failed:", error);
       let errorMessage =

@@ -9,7 +9,7 @@ import cookieParser from "cookie-parser";
 
 dotenv.config();
 const app = express();
-const logger = new Logger("app");
+const logger = new Logger("app-server");
 const PORT = process.env.PORT || 8090;
 
 async function initServer() {

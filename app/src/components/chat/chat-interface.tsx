@@ -14,6 +14,7 @@ export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isChatActive, setIsChatActive] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   const socket = useSocket();
   const chatCreatorState = useRecoilValue<ChatCreator>(ChatCreatorState);
@@ -21,9 +22,10 @@ export const ChatInterface = () => {
   const navigate = useNavigate();
 
   const roomCreatedRef = useRef(false);
+  const roomJoinedRef = useRef(false);
 
   const hasMessages = messages.length > 0;
-  const canSubmit = input.trim().length > 0 && isChatActive;
+  const canSubmit = input.trim().length > 0 && isChatActive && isConnected;
 
   const startChat = useCallback(() => {
     if (isChatActive) return;
@@ -42,21 +44,22 @@ export const ChatInterface = () => {
         timestamp: new Date(),
       };
 
+      //optimistic update
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
 
-      setTimeout(() => {
-        const otherUserMessage = {
-          id: `msg_${Date.now()}_other`,
-          role: "client" as const,
-          content: `${userMessage.content}`,
-          timestamp: new Date(),
-        };
-
-        setMessages((prev) => [...prev, otherUserMessage]);
-      }, 1000 + Math.random() * 2000);
+      if (socket && chatCreatorState.roomId) {
+        socket.emit("send-message", {
+          roomId: chatCreatorState.roomId,
+          senderId: chatCreatorState.loggedInUser,
+          receiverId: chatCreatorState.targetUser,
+          content: userMessage.content,
+          timestamp: userMessage.timestamp,
+          messageId: userMessage.id,
+        });
+      }
     },
-    [canSubmit, input]
+    [canSubmit, input, socket, chatCreatorState]
   );
 
   const handleExitChat = useCallback(
@@ -65,6 +68,18 @@ export const ChatInterface = () => {
 
       if (window.confirm("Are you sure you want to leave the chat?")) {
         try {
+          // Emit leave room event
+          if (
+            socket &&
+            chatCreatorState.roomId &&
+            chatCreatorState.loggedInUser
+          ) {
+            socket.emit("leave-room", {
+              roomId: chatCreatorState.roomId,
+              phantomId: chatCreatorState.loggedInUser,
+            });
+          }
+
           showSuccessToast("Leaving chat session...", 1500);
           setIsChatActive(false);
           navigate("/");
@@ -74,10 +89,10 @@ export const ChatInterface = () => {
         }
       }
     },
-    [navigate]
+    [navigate, socket, chatCreatorState]
   );
 
-  // Handle room creation
+  // room creation (for creators)
   useEffect(() => {
     if (
       chatCreatorState.isCreator &&
@@ -94,21 +109,93 @@ export const ChatInterface = () => {
     }
   }, [chatCreatorState, socket]);
 
-  //socket error listener
+  // room joining (for non-creators)
+  useEffect(() => {
+    if (
+      !chatCreatorState.isCreator &&
+      chatCreatorState.roomId &&
+      socket &&
+      !roomJoinedRef.current
+    ) {
+      socket.emit("join-room", {
+        roomId: chatCreatorState.roomId,
+        phantomId: chatCreatorState.loggedInUser,
+      });
+      roomJoinedRef.current = true;
+    }
+  }, [chatCreatorState, socket]);
+
+  // socket event listeners
   useEffect(() => {
     if (!socket) return;
 
+    const handleConnect = () => {
+      setIsConnected(true);
+    };
+
+    const handleDisconnect = () => {
+      setIsConnected(false);
+    };
+
     const handleError = (error: any) => {
       console.error("Socket error:", error);
-      showErrorToast(error.message, 1500);
+      showErrorToast(error.message || "Connection error", 1500);
     };
 
+    const handleRoomCreated = () => {
+      showSuccessToast("Chat room created successfully", 1500);
+    };
+
+    const handleJoinedRoom = () => {
+      showSuccessToast("Successfully joined chat room", 1500);
+    };
+
+    const handleUserJoined = (data: any) => {
+      if (data.phantomId !== chatCreatorState.loggedInUser) {
+        showSuccessToast(`${data.phantomId} joined the chat`, 1500);
+      }
+    };
+
+    const handleUserLeft = (data: any) => {
+      if (data.phantomId !== chatCreatorState.loggedInUser) {
+        showErrorToast(`${data.phantomId} left the chat`, 1500);
+      }
+    };
+
+    const handleIncomingMessage = (messageData: any) => {
+      const incomingMessage: Message = {
+        id: messageData.id || `msg_${Date.now()}`,
+        role:
+          messageData.senderId === chatCreatorState.loggedInUser
+            ? "user"
+            : "client",
+        content: messageData.content,
+        timestamp: new Date(messageData.timestamp || Date.now()),
+      };
+
+      setMessages((prev) => [...prev, incomingMessage]);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
     socket.on("error", handleError);
+    socket.on("room-created", handleRoomCreated);
+    socket.on("joined-room", handleJoinedRoom);
+    socket.on("user-joined", handleUserJoined);
+    socket.on("user-left", handleUserLeft);
+    socket.on("new-message", handleIncomingMessage);
 
     return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
       socket.off("error", handleError);
+      socket.off("room-created", handleRoomCreated);
+      socket.off("joined-room", handleJoinedRoom);
+      socket.off("user-joined", handleUserJoined);
+      socket.off("user-left", handleUserLeft);
+      socket.off("new-message", handleIncomingMessage);
     };
-  }, [socket]);
+  }, [socket, chatCreatorState.loggedInUser]);
 
   useEffect(() => {
     if (!isChatActive) {
@@ -116,9 +203,10 @@ export const ChatInterface = () => {
     }
   }, [isChatActive, startChat]);
 
-  // Reset room created flag when chat creator state changes
+  // reset room flags when chat creator state changes
   useEffect(() => {
     roomCreatedRef.current = false;
+    roomJoinedRef.current = false;
   }, [chatCreatorState.roomId]);
 
   return (
@@ -129,6 +217,13 @@ export const ChatInterface = () => {
           <h2 className="text-4xl text-white font-bold">
             <IconShieldCheckFilled />
           </h2>
+          {/* Connection status indicator */}
+          <div
+            className={`w-3 h-3 rounded-full ${
+              isConnected ? "bg-green-500" : "bg-red-500"
+            }`}
+            title={isConnected ? "Connected" : "Disconnected"}
+          />
         </div>
         <button
           className="group/btn relative flex items-center justify-center shadow-input w-40 h-10 rounded-xl font-semibold bg-black border-transparent text-white text-sm dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_#262626] hover:bg-zinc-800 transition-all duration-300 hover:-translate-y-0.5 hover:cursor-pointer"

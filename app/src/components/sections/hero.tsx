@@ -112,7 +112,7 @@ export default function HeroSection() {
       if (resp.status === 200) {
         showSuccessToast("Validated User Details, Redirecting . . .", 500);
 
-        const roomId = `ph-${nanoid()}`;
+        const roomId = nanoid();
 
         setChatCreatorState({
           isCreator: true,
