@@ -18,8 +18,9 @@ async function initServer() {
     app.use(cookieParser());
     app.use(
       cors({
-        origin: "*",
-        allowedHeaders: "*",
+        origin: "https://phantom.chainsync.in",
+        credentials: true,
+        allowedHeaders: ["Content-Type", "Authorization"],
       })
     );
 
