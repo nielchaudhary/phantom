@@ -46,6 +46,9 @@ export default function HeroSection() {
 
   const handleJoinPhantom = async () => {
     try {
+      if (sessionStorage.getItem("auth_token")) {
+        sessionStorage.removeItem("auth_token");
+      }
       const resp = await generateIdentity();
       setIdentity(resp.data);
       setActiveModal("generate");

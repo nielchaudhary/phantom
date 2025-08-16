@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { IconLogout, IconShieldCheckFilled } from "@tabler/icons-react";
+import {
+  IconCopy,
+  IconLogout,
+  IconShieldCheckFilled,
+} from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { type Message } from "../../lib/chat";
 import { useAutoScroll } from "../../hooks/use-auto-scroll";
@@ -9,6 +13,11 @@ import { showSuccessToast, showErrorToast } from "../../lib/utils";
 import { useSocket } from "../../hooks/use-socket";
 import { useRecoilValue } from "recoil";
 import { ChatCreatorState, type ChatCreator } from "../../atoms/chat-identity";
+import { toast } from "sonner";
+import type {
+  IIncomingMessageData,
+  IUserJoinedData,
+} from "../../lib/constants";
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -80,7 +89,7 @@ export const ChatInterface = () => {
             });
           }
 
-          showSuccessToast("Leaving chat session...", 1500);
+          showSuccessToast("Leaving Chat Session", 1500);
           setIsChatActive(false);
           navigate("/");
         } catch (error) {
@@ -106,6 +115,36 @@ export const ChatInterface = () => {
         receiverPhantomId: chatCreatorState.targetUser,
       });
       roomCreatedRef.current = true;
+      toast(
+        <div className="flex items-center justify-between w-full">
+          {" "}
+          <span className="text-center mr-10 text-red-400 font-bold">
+            Room ID: <span>{chatCreatorState.roomId}</span>
+          </span>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(chatCreatorState.roomId);
+              toast.success("Copied to clipboard!", {
+                position: "top-center",
+                duration: 500,
+              });
+            }}
+            className="bg-black text-white border-0 px-2.5 py-1.5 rounded cursor-pointer hover:-translate-y-0.5 transition-all duration-300"
+          >
+            <IconCopy className="h-4 w-4" />
+          </button>
+        </div>,
+        {
+          position: "top-center",
+          duration: 4000,
+          closeButton: false,
+          style: {
+            background: "black",
+            color: "white",
+            border: "none",
+          },
+        }
+      );
     }
   }, [chatCreatorState, socket]);
 
@@ -138,32 +177,33 @@ export const ChatInterface = () => {
     };
 
     //todo - fix this later, remove any
-    const handleError = (error: any) => {
+    const handleError = (error: Error) => {
       console.error("Socket error:", error);
       showErrorToast(error.message || "Connection error", 1500);
     };
 
     const handleRoomCreated = () => {
-      showSuccessToast("Chat room created successfully", 1500);
+      console.log("Chat room created successfully", 1500);
     };
 
     const handleJoinedRoom = () => {
       showSuccessToast("Successfully joined chat room", 1500);
     };
 
-    const handleUserJoined = (data: any) => {
+    const handleUserJoined = (data: IUserJoinedData) => {
       if (data.phantomId !== chatCreatorState.loggedInUser) {
         showSuccessToast(`${data.phantomId} joined the chat`, 1500);
       }
     };
 
-    const handleUserLeft = (data: any) => {
+    //same data emitted as that of user joined event
+    const handleUserLeft = (data: IUserJoinedData) => {
       if (data.phantomId !== chatCreatorState.loggedInUser) {
         showErrorToast(`${data.phantomId} left the chat`, 1500);
       }
     };
 
-    const handleIncomingMessage = (messageData: any) => {
+    const handleIncomingMessage = (messageData: IIncomingMessageData) => {
       const incomingMessage: Message = {
         id: messageData.id || `msg_${Date.now()}`,
         role:
