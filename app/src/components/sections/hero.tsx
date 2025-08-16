@@ -126,7 +126,7 @@ export default function HeroSection() {
       }
     } catch (error) {
       console.error("Error verifying Phantom ID:", error);
-      let errorMessage = "User Not Found, Please Check Phantom ID again.";
+      const errorMessage = "User Not Found, Please Check Phantom ID again.";
       handleFrontendError(error as Error, errorMessage);
     }
   };
@@ -159,7 +159,7 @@ export default function HeroSection() {
         }
       } catch (error) {
         console.error("Error verifying Phantom ID:", error);
-        let errorMessage =
+        const errorMessage =
           "User Not Found, Please Login with correct Credentials.";
         handleFrontendError(error as Error, errorMessage);
         setActiveModal("import");

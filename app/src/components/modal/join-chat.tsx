@@ -47,7 +47,7 @@ export default function JoinChat() {
       }
     } catch (error) {
       console.error("Error verifying Phantom ID:", error);
-      let errorMessage =
+      const errorMessage =
         "User Not Found, Please Login with correct Credentials.";
       handleFrontendError(error as Error, errorMessage);
     }
@@ -77,7 +77,7 @@ export default function JoinChat() {
       }, 1500);
     } catch (error) {
       console.error("Invite verification failed:", error);
-      let errorMessage =
+      const errorMessage =
         "Invite verification failed, please check Chat Room ID and Phantom ID again.";
 
       handleFrontendError(error as Error, errorMessage);

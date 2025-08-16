@@ -137,6 +137,7 @@ export const ChatInterface = () => {
       setIsConnected(false);
     };
 
+    //todo - fix this later, remove any
     const handleError = (error: any) => {
       console.error("Socket error:", error);
       showErrorToast(error.message || "Connection error", 1500);
