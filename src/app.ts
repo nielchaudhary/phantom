@@ -20,7 +20,6 @@ async function initServer() {
       cors({
         origin: "*",
         allowedHeaders: "*",
-        credentials: true,
       })
     );
 
