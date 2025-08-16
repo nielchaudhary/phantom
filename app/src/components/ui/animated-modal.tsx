@@ -80,7 +80,7 @@ export const ModalBody = ({
           <motion.div
             ref={modalRef}
             className={cn(
-              "min-h-[30%] max-h-[80%] md:max-w-[40%] py-5 px-3 bg-black dark:bg-black border border-transpxarent dark:border-neutral-800 md:rounded-2xl relative z-50 flex flex-col flex-1 overflow-hidden",
+              "min-h-[30%] max-h-[90%] w-[95%] max-w-[95%] sm:w-[85%] sm:max-w-[85%] md:w-[60%] md:max-w-[60%] lg:w-[45%] lg:max-w-[45%] mx-4 my-4 bg-black dark:bg-black border border-transparent dark:border-neutral-800 rounded-lg md:rounded-2xl relative z-50 flex flex-col overflow-hidden",
               className
             )}
             initial={{
@@ -106,8 +106,10 @@ export const ModalBody = ({
               damping: 15,
             }}
           >
-            <CloseIcon />
-            {children}
+            <div className="flex flex-col h-full">
+              <CloseIcon />
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       )}
@@ -123,7 +125,12 @@ export const ModalContent = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("flex flex-col flex-1 p-8 md:p-10", className)}>
+    <div
+      className={cn(
+        "flex flex-col flex-1 p-4 px-6 sm:p-6 sm:px-8 md:p-8 md:px-10 overflow-y-auto",
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -137,7 +144,12 @@ export const ModalFooter = ({
   className?: string;
 }) => {
   return (
-    <div className={cn("flex justify-center p-4 bg-black", className)}>
+    <div
+      className={cn(
+        "flex justify-center p-3 px-4 sm:p-4 sm:px-6 md:p-4 md:px-8 bg-black  mt-auto flex-shrink-0",
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -167,7 +179,7 @@ const CloseIcon = () => {
   return (
     <button
       onClick={() => setOpen(false)}
-      className="absolute top-4 right-4 group cursor-pointer"
+      className="absolute top-3 right-3 sm:top-4 sm:right-4 group cursor-pointer z-10"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +191,7 @@ const CloseIcon = () => {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="text-black dark:text-white h-4 w-4 group-hover:scale-125 group-hover:rotate-3 transition duration-200"
+        className="text-white h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-125 group-hover:rotate-3 transition duration-200"
       >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <path d="M18 6l-12 12" />

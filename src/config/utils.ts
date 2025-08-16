@@ -5,6 +5,11 @@ export const isNullOrUndefined = (value: any): value is null | undefined => {
   return value === null || value === undefined;
 };
 
+export const originHeader =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:5173"
+    : "https://phantom.chainsync.in";
+
 export interface Invite {
   roomId: string;
   senderPhantomId: string;

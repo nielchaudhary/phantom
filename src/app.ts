@@ -6,6 +6,7 @@ import { phantomRouter } from "./config/router";
 import { initDB } from "./config/db";
 import { initRedis } from "./config/redis";
 import cookieParser from "cookie-parser";
+import { originHeader } from "./config/utils";
 
 dotenv.config();
 const app = express();
@@ -18,7 +19,7 @@ async function initServer() {
     app.use(cookieParser());
     app.use(
       cors({
-        origin: "https://phantom.chainsync.in",
+        origin: originHeader,
         credentials: true,
         allowedHeaders: ["Content-Type", "Authorization"],
       })
